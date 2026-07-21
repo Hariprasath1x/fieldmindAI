@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+onnxruntime
+pillow
+numpy
+joblib
+scikit-learn
+streamlit
+requests
+python-multipart
