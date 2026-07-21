@@ -1,0 +1,33 @@
+# Python bytecode and cache
+__pycache__/
+*.py[cod]
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Packaging / tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+dist/
+build/
+*.egg-info/
+
+# Editor settings
+.vscode/
+.idea/
+
+# Streamlit cache and local runtime artifacts
+.streamlit/
+
+# Large or generated project assets that should stay out of git
+Field Mind.pdf
+models/confusion_matrix.png
+models/training_curves.png
+models/fieldmind_best.pth
+models/fieldmind_yolo_best.pt
