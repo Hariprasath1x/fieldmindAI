@@ -31,3 +31,12 @@ models/confusion_matrix.png
 models/training_curves.png
 models/fieldmind_best.pth
 models/fieldmind_yolo_best.pt
+models/best_leaf_model.pth
+models/FieldMind_LeafVerifier_v1.zip
+models/training_config.json
+
+# Keep future training outputs and local exports out of git
+models/*.pth
+models/*.pt
+models/*.zip
+models/*.png
