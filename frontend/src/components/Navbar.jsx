@@ -1,10 +1,12 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Leaf, Menu } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../hooks/useAuth';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, loading } = useAuth();
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -38,6 +40,17 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
+              
+              {!user && !loading && (
+                <>
+                  <Link to="/login" className="px-4 py-2 rounded-md text-sm font-medium border border-white text-white hover:bg-white hover:text-primary transition-colors">
+                    Login
+                  </Link>
+                  <Link to="/register" className="px-4 py-2 rounded-md text-sm font-bold bg-white text-primary hover:bg-gray-100 transition-colors shadow-sm">
+                    Register
+                  </Link>
+                </>
+              )}
             </div>
           </div>
           <div className="-mr-2 flex md:hidden">

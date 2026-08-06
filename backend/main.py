@@ -16,7 +16,17 @@ from pydantic import BaseModel, Field
 from PIL import Image
 
 from backend.services.leaf_verifier import LeafVerifier, LeafVerifierInferenceError, LeafVerifierInitializationError
+from backend.services.location_service import get_location_info
+from backend.services.soil_service import get_soil_info
+from backend.services.estimation_service import estimate_npk
+from backend.services.recommendation_reason_service import get_crop_metadata, generate_reasons
+from backend.routers.marketplace import router as marketplace_router
 
+class LocationRequest(BaseModel):
+    latitude: float
+    longitude: float
+
+LOCATION_CACHE = {}
 
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = BASE_DIR.parent
@@ -265,6 +275,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(marketplace_router)
+
 
 @app.get("/")
 def root() -> dict[str, str]:
@@ -424,13 +436,85 @@ async def predict_disease(file: UploadFile = File(...)) -> dict[str, Any]:
 
 
 @app.post("/predict/crop")
-def predict_crop(payload: CropRequest) -> dict[str, str]:
+def predict_crop(payload: CropRequest) -> dict[str, Any]:
     features = np.array([[payload.N, payload.P, payload.K, payload.temperature, payload.humidity, payload.ph, payload.rainfall]], dtype=np.float32)
-    prediction = crop_model.predict(features)[0]
-
-    if hasattr(crop_model, "classes_"):
+    
+    if hasattr(crop_model, "predict_proba"):
+        probabilities = crop_model.predict_proba(features)[0]
         classes = list(crop_model.classes_)
-        if isinstance(prediction, (np.integer, int)) and 0 <= int(prediction) < len(classes):
-            prediction = classes[int(prediction)]
+        
+        # Get top 3 indices
+        top_indices = np.argsort(probabilities)[-3:][::-1]
+        
+        recommendations = []
+        for i, idx in enumerate(top_indices):
+            crop_name = str(classes[idx])
+            confidence = round(float(probabilities[idx]) * 100, 2)
+            
+            metadata = get_crop_metadata(crop_name)
+            is_top = (i == 0)
+            reasons = generate_reasons(crop_name, payload, is_top)
+            
+            recommendations.append({
+                "crop": crop_name,
+                "confidence": confidence,
+                "season": metadata["season"],
+                "water_requirement": metadata["water_requirement"],
+                "water_range": metadata["water_range"],
+                "difficulty": metadata["difficulty"],
+                "description": metadata["description"],
+                "reasons": reasons
+            })
+            
+        return {"recommendations": recommendations}
+    else:
+        # Fallback if model doesn't support predict_proba
+        prediction = crop_model.predict(features)[0]
+        if hasattr(crop_model, "classes_"):
+            classes = list(crop_model.classes_)
+            if isinstance(prediction, (np.integer, int)) and 0 <= int(prediction) < len(classes):
+                prediction = classes[int(prediction)]
+                
+        crop_name = str(prediction)
+        metadata = get_crop_metadata(crop_name)
+        reasons = generate_reasons(crop_name, payload, True)
+        
+        return {"recommendations": [{
+            "crop": crop_name,
+            "confidence": 100.0,
+            "season": metadata["season"],
+            "water_requirement": metadata["water_requirement"],
+            "water_range": metadata["water_range"],
+            "difficulty": metadata["difficulty"],
+            "description": metadata["description"],
+            "reasons": reasons
+        }]}
 
-    return {"recommended_crop": str(prediction)}
+
+@app.post("/api/location/collect")
+async def collect_location_data(payload: LocationRequest) -> dict[str, Any]:
+    lat = round(payload.latitude, 4)
+    lon = round(payload.longitude, 4)
+    cache_key = f"{lat},{lon}"
+    
+    if cache_key in LOCATION_CACHE:
+        logger.info(f"Returning cached location data for {cache_key}")
+        return LOCATION_CACHE[cache_key]
+        
+    logger.info(f"Fetching location data for {cache_key}")
+    
+    location_data = get_location_info(lat, lon)
+    weather_data = get_weather_info(lat, lon)
+    soil_data = get_soil_info(lat, lon)
+    estimated_npk = estimate_npk(soil_data, weather_data)
+    
+    response_data = {
+        "location": location_data,
+        "weather": weather_data,
+        "soil": soil_data,
+        "estimated": estimated_npk
+    }
+    
+    # Cache the result
+    LOCATION_CACHE[cache_key] = response_data
+    return response_data

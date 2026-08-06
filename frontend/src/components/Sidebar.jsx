@@ -1,13 +1,16 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Activity, Info, Settings } from 'lucide-react';
+import { Home, Search, Activity, Tractor, Users, LayoutDashboard, Info, Settings } from 'lucide-react';
 
 export default function Sidebar() {
   const location = useLocation();
 
   const menuItems = [
-    { icon: Home, label: 'Dashboard', path: '/' },
-    { icon: Search, label: 'Detection', path: '/disease-detection' },
-    { icon: Activity, label: 'Recommendation', path: '/crop-recommendation' },
+    { icon: Home, label: 'Home', path: '/' },
+    { icon: LayoutDashboard, label: 'My Dashboard', path: '/dashboard' },
+    { icon: Search, label: 'Disease Detection', path: '/disease-detection' },
+    { icon: Activity, label: 'Crop Recommendation', path: '/crop-recommendation' },
+    { icon: Tractor, label: 'Equipment Rental', path: '/equipment' },
+    { icon: Users, label: 'Farm Workforce', path: '/workforce' },
     { icon: Info, label: 'About', path: '/about' },
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];

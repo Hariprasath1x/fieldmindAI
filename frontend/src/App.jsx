@@ -10,6 +10,12 @@ import About from './pages/About'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 
+import Login from './pages/Login'
+import Register from './pages/Register'
+import EquipmentMarketplace from './pages/EquipmentMarketplace'
+import FarmWorkforce from './pages/FarmWorkforce'
+import Dashboard from './pages/Dashboard'
+
 function App() {
   return (
     <div className="flex flex-col min-h-screen">
@@ -22,6 +28,11 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/disease-detection" element={<DiseaseDetection />} />
               <Route path="/crop-recommendation" element={<CropRecommendation />} />
+              <Route path="/equipment" element={<EquipmentMarketplace />} />
+              <Route path="/workforce" element={<FarmWorkforce />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="/about" element={<About />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />

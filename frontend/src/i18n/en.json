@@ -1,0 +1,14 @@
+{
+  "welcome": "Welcome to FieldMind Marketplace",
+  "login": "Login",
+  "register": "Register",
+  "logout": "Logout",
+  "equipment_rental": "Equipment Rental",
+  "farm_workforce": "Farm Workforce",
+  "dashboard": "Dashboard",
+  "book_now": "Book Now",
+  "search_equipment": "Search Equipment...",
+  "search_workers": "Search Workers...",
+  "hourly": "per hour",
+  "daily": "per day"
+}
