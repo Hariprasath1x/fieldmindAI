@@ -34,6 +34,7 @@ models/fieldmind_yolo_best.pt
 models/best_leaf_model.pth
 models/FieldMind_LeafVerifier_v1.zip
 models/training_config.json
+models/**
 
 # Keep future training outputs and local exports out of git
 models/*.pth
