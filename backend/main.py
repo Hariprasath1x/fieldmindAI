@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import io
 import json
+import logging
+import time
 from pathlib import Path
 from typing import Any
 
@@ -13,9 +15,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from PIL import Image
 
+from backend.services.leaf_verifier import LeafVerifier, LeafVerifierInferenceError, LeafVerifierInitializationError
+
 
 BASE_DIR = Path(__file__).resolve().parent
 PROJECT_DIR = BASE_DIR.parent
+logger = logging.getLogger("fieldmind")
 
 
 def resolve_model_path(filename: str) -> Path:
@@ -249,6 +254,8 @@ class CropRequest(BaseModel):
 
 
 app = FastAPI(title="FieldMind API", version="1.0.0")
+app.state.leaf_verifier = None
+app.state.leaf_verifier_error = None
 
 app.add_middleware(
     CORSMiddleware,
@@ -264,32 +271,156 @@ def root() -> dict[str, str]:
     return {"message": "FieldMind backend is running."}
 
 
-@app.post("/predict/disease")
-async def predict_disease(file: UploadFile = File(...)) -> dict[str, Any]:
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="Please upload a JPG or PNG image.")
+@app.on_event("startup")
+def startup_leaf_verifier() -> None:
+    """Initialize the leaf verifier once during application startup."""
 
     try:
-        image_bytes = await file.read()
+        app.state.leaf_verifier = LeafVerifier(
+            model_path=resolve_model_path("leaf_verifier.onnx"),
+            config_path=resolve_model_path("leaf_verifier_config.json"),
+            labels_path=resolve_model_path("labels.json"),
+        )
+        app.state.leaf_verifier_error = None
+        logger.info("Leaf verifier initialized successfully.")
+    except (FileNotFoundError, LeafVerifierInitializationError) as exc:
+        app.state.leaf_verifier = None
+        app.state.leaf_verifier_error = str(exc)
+        logger.error("Leaf verifier initialization failed: %s", exc)
+
+
+def get_leaf_verifier() -> LeafVerifier:
+    verifier = getattr(app.state, "leaf_verifier", None)
+    if verifier is not None:
+        return verifier
+
+    raise HTTPException(status_code=503, detail="Leaf verification is temporarily unavailable.")
+
+
+def load_uploaded_image(image_bytes: bytes) -> Image.Image:
+    """Load and fully decode an uploaded image."""
+
+    try:
         image = Image.open(io.BytesIO(image_bytes))
+        image.load()
+        return image
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=400, detail="Could not read the uploaded image.") from exc
 
-    disease_label, confidence, _ = run_classifier(image)
 
-    if confidence < 0.60:
-        return {
-            "status": "unknown",
-            "message": "This doesn't look like a recognized plant/leaf image. Please upload a clear photo of a plant leaf.",
-        }
+def build_recommendation(disease_label: str, disease_confidence: float, severity_detections: list[dict[str, Any]]) -> str:
+    if disease_confidence < 0.60:
+        return "This image was too uncertain for disease analysis. Please upload a clearer plant leaf image."
 
-    severity_detections = run_yolo(image)
-    return {
-        "status": "ok",
+    if not severity_detections:
+        return f"Detected {disease_label}. No severity boxes were returned, so continue monitoring the plant closely."
+
+    top_detection = max(severity_detections, key=lambda item: float(item.get("confidence", 0.0)))
+    label = top_detection.get("label", "the affected area")
+    return f"Detected {disease_label}. Review {label} and apply the appropriate treatment based on local agronomy guidance."
+
+
+def build_bounding_boxes(severity_detections: list[dict[str, Any]]) -> list[list[float]]:
+    return [list(map(float, detection.get("box", []))) for detection in severity_detections if detection.get("box")]
+
+
+@app.post("/predict/disease")
+async def predict_disease(file: UploadFile = File(...)) -> dict[str, Any]:
+    request_started_at = time.perf_counter()
+
+    if not file.content_type or not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Please upload a JPG or PNG image.")
+
+    image_bytes = await file.read()
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Could not read the uploaded image.")
+
+    image = load_uploaded_image(image_bytes)
+    verifier = get_leaf_verifier()
+
+    try:
+        verification_result = verifier.predict(image)
+    except LeafVerifierInferenceError as exc:
+        logger.error("Leaf verification inference failed: %s", exc)
+        raise HTTPException(status_code=502, detail="Leaf verification failed.") from exc
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Unexpected leaf verification failure: %s", exc)
+        raise HTTPException(status_code=500, detail="Unexpected error during leaf verification.") from exc
+
+    verification = verification_result["verification"]
+    pipeline = verification_result["pipeline"]
+    logger.info(
+        "Leaf verification result=%s confidence=%.4f",
+        verification["status"],
+        float(verification["confidence"]),
+    )
+
+    if not pipeline["allow_processing"]:
+        total_request_ms = (time.perf_counter() - request_started_at) * 1000.0
+        logger.info("Total request time=%.2f ms", total_request_ms)
+        return verification_result
+
+    disease_started_at = time.perf_counter()
+    try:
+        disease_label, disease_confidence, _ = run_classifier(image)
+    except ort.OrtError as exc:
+        logger.error("Disease classification failed: %s", exc)
+        raise HTTPException(status_code=502, detail="Disease classification failed.") from exc
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Unexpected disease classification failure: %s", exc)
+        raise HTTPException(status_code=500, detail="Unexpected error during disease classification.") from exc
+
+    logger.info("Disease prediction=%s confidence=%.4f", disease_label, disease_confidence)
+
+    severity_detections: list[dict[str, Any]] = []
+    yolo_execution_ms = 0.0
+    if disease_confidence >= 0.60:
+        try:
+            severity_started_at = time.perf_counter()
+            severity_detections = run_yolo(image)
+            yolo_execution_ms = (time.perf_counter() - severity_started_at) * 1000.0
+        except ort.OrtError as exc:
+            logger.error("YOLO inference failed: %s", exc)
+            raise HTTPException(status_code=502, detail="Severity detection failed.") from exc
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Unexpected YOLO failure: %s", exc)
+            raise HTTPException(status_code=500, detail="Unexpected error during severity detection.") from exc
+
+        logger.info("YOLO execution time=%.2f ms", yolo_execution_ms)
+    else:
+        logger.info("YOLO execution skipped because disease confidence was below threshold.")
+
+    total_request_ms = (time.perf_counter() - request_started_at) * 1000.0
+    bounding_boxes = build_bounding_boxes(severity_detections)
+    recommendation = build_recommendation(disease_label, disease_confidence, severity_detections)
+
+    response: dict[str, Any] = {
+        "success": True,
+        "verification": verification,
+        "pipeline": pipeline,
+        "status": "ok" if disease_confidence >= 0.60 else "unknown",
         "disease": disease_label,
-        "confidence": confidence,
+        "confidence": disease_confidence,
+        "disease_prediction": {
+            "label": disease_label,
+            "confidence": disease_confidence,
+        },
+        "severity": {
+            "detections": severity_detections,
+            "bounding_boxes": bounding_boxes,
+        },
         "severity_detections": severity_detections,
+        "bounding_boxes": bounding_boxes,
+        "recommendation": recommendation,
     }
+
+    if disease_confidence < 0.60:
+        response["message"] = "This doesn't look like a recognized plant/leaf image. Please upload a clear photo of a plant leaf."
+
+    logger.info("Total request time=%.2f ms", total_request_ms)
+    return response
 
 
 @app.post("/predict/crop")

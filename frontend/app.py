@@ -34,7 +34,11 @@ with tab_disease:
                 response.raise_for_status()
                 result = response.json()
 
-                if result.get("status") == "unknown":
+                pipeline = result.get("pipeline", {})
+
+                if not pipeline.get("allow_processing", True):
+                    st.warning(result.get("message", "Upload a clearer plant leaf image."))
+                elif result.get("status") == "unknown":
                     st.warning(result.get("message", "Upload a clearer plant leaf image."))
                 else:
                     st.success(f"Predicted disease: {result.get('disease', 'Unknown')}")

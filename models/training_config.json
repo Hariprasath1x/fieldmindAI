@@ -1,0 +1,11 @@
+{
+    "model": "EfficientNet-B0",
+    "input_size": 224,
+    "classes": [
+        "non_leaf",
+        "leaf"
+    ],
+    "validation_accuracy": 0.9976252671574448,
+    "framework": "PyTorch",
+    "export": "ONNX"
+}
