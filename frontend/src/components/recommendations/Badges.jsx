@@ -1,4 +1,4 @@
-import { Droplets, Calendar, Activity, Sprout } from 'lucide-react';
+import { Droplets, Calendar, Activity } from 'lucide-react';
 
 export const SeasonBadge = ({ season }) => (
   <div className="flex items-center space-x-1.5 bg-green-50 text-green-700 px-2.5 py-1 rounded-full text-xs font-semibold border border-green-200">

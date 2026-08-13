@@ -1,0 +1,3 @@
+# Evaluation results are stored here as timestamped JSON files.
+# This directory is not committed to version control (see .gitignore).
+# Run: python -m evaluation.evaluate

@@ -84,6 +84,7 @@ export default function Login() {
       
       navigate('/dashboard');
     } catch (err) {
+      console.error(err);
       setError("Invalid OTP.");
     }
     setLoading(false);

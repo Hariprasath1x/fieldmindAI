@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { useNavigate } from 'react-router-dom';
@@ -23,9 +23,9 @@ export default function Dashboard() {
     } else if (user && profile) {
       fetchData();
     }
-  }, [user, profile, loading, navigate]);
+  }, [user, profile, loading, navigate, fetchData]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const oRes = await getOwnerBookings(user.uid);
       setOwnerBookings(oRes);
@@ -35,13 +35,14 @@ export default function Dashboard() {
     } catch (e) {
       console.error(e);
     }
-  };
+  }, [user]);
 
   const handleStatusChange = async (id, status) => {
     try {
       await updateBookingStatus(id, status);
       fetchData(); // refresh
     } catch (e) {
+      console.error(e);
       alert("Failed to update status");
     }
   };

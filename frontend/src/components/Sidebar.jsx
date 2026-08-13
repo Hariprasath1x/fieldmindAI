@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Activity, Tractor, Users, LayoutDashboard, Info, Settings } from 'lucide-react';
+import { Home, Search, Activity, Tractor, Users, LayoutDashboard, Info, Settings, History, BarChart3 } from 'lucide-react';
 
 export default function Sidebar() {
   const location = useLocation();
@@ -8,7 +8,9 @@ export default function Sidebar() {
     { icon: Home, label: 'Home', path: '/' },
     { icon: LayoutDashboard, label: 'My Dashboard', path: '/dashboard' },
     { icon: Search, label: 'Disease Detection', path: '/disease-detection' },
+    { icon: History, label: 'Diagnosis History', path: '/diagnosis-history' },
     { icon: Activity, label: 'Crop Recommendation', path: '/crop-recommendation' },
+    { icon: BarChart3, label: 'ML Dashboard', path: '/ml-dashboard' },
     { icon: Tractor, label: 'Equipment Rental', path: '/equipment' },
     { icon: Users, label: 'Farm Workforce', path: '/workforce' },
     { icon: Info, label: 'About', path: '/about' },

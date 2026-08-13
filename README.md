@@ -1,111 +1,75 @@
 # FieldMind
 
-FieldMind is a simple crop disease detection and crop recommendation demo built with a FastAPI backend and a Streamlit frontend.
+An intelligent agricultural platform with machine learning inference for disease detection, crop recommendation, and an integrated marketplace.
 
-It uses your pre-trained model files directly. No training or fine-tuning is included in this project.
+## Architecture
 
-## Project Structure
+* **Frontend**: React + Vite + Tailwind CSS
+* **Backend**: FastAPI + Python 3.10
+* **Machine Learning**: ONNX Runtime + Scikit-learn
+* **Database & Auth**: Firebase / Firestore (with Local Mock fallback)
+* **Background Processing**: Redis + RQ (with thread-pool sync fallback)
 
-```
-fieldmind/
-  backend/
-    main.py
-    services/
-      leaf_verifier.py
-  frontend/
-    app.py
-  models/
-    class_names.json
-    labels.json
-    leaf_verifier.onnx
-    leaf_verifier_config.json
-    yolo_classes.json
-    crop_model.pkl
-    fieldmind_pest.onnx
-    fieldmind_yolo_best.onnx
-  requirements.txt
-  start.cmd
-  start.bat
-  start.ps1
-```
+## Running the Application
 
-## Model Files
+### 1. Backend
 
-Place the model assets inside the root `models/` folder:
-
-- `models/class_names.json` - ordered disease labels
-- `models/yolo_classes.json` - YOLO label map
-- `models/labels.json` - leaf verifier label map
-- `models/leaf_verifier.onnx` - ONNX leaf verification model
-- `models/leaf_verifier_config.json` - leaf verifier preprocessing and threshold config
-- `models/crop_model.pkl` - scikit-learn crop recommendation model
-- `models/fieldmind_pest.onnx` - ONNX disease classifier
-- `models/fieldmind_yolo_best.onnx` - ONNX YOLO model for severity/pest detection
-
-The backend also supports `models/fieldmind_best.onnx` if you rename or replace the classifier later.
-
-## Requirements
-
-Install dependencies with:
-
+Install requirements:
 ```bash
 pip install -r requirements.txt
 ```
 
-## How To Run
-
-### Option 1: One-click start on Windows
-
-Double-click `start.bat`.
-
-If you are already in PowerShell, run:
-
-```powershell
-.\start.cmd
-```
-
-If you prefer to call the script directly, use:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\start.ps1
-```
-
-This launches:
-
-- FastAPI backend at `http://localhost:8000`
-- Streamlit frontend at `http://localhost:8501`
-
-### Option 2: Run manually
-
-Start the backend:
-
+Run the backend server (FastAPI):
 ```bash
-uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+uvicorn backend.main:app --reload
 ```
 
-Then start the frontend in a second terminal:
-
+Run the inference background worker (optional, requires Redis):
 ```bash
-streamlit run frontend/app.py
+python -m backend.worker.inference_worker
 ```
 
-## What The App Does
+### 2. Frontend
 
-### Disease Detection
+Install dependencies:
+```bash
+cd frontend
+npm install
+```
 
-- Upload a JPG or PNG image of a plant leaf.
-- The backend first runs the leaf verification ONNX model.
-- Non-leaf uploads are rejected before disease detection or YOLO execution.
-- Verified leaf images continue through the existing disease classifier and YOLO severity pipeline.
-- If disease confidence is below 0.60, the result is marked as unknown.
+Start the development server:
+```bash
+npm run dev
+```
 
-### Crop Recommendation
+## Features
 
-- Enter soil and weather values for `N`, `P`, `K`, temperature, humidity, pH, and rainfall.
-- The backend loads `crop_model.pkl` and returns the predicted crop.
+1. **Disease Detection (Asynchronous Pipeline)**
+   - Image Validation (blur, size, corruption checks)
+   - Leaf Verification
+   - Disease Classification
+   - Severity & Bounding Box Localization
 
-## Notes
+2. **Marketplace**
+   - Equipment Rental Booking Lifecycle
+   - Farm Workforce Directory
 
-- The app reads labels from the JSON files in `models/`.
-- The backend uses CPU inference through `onnxruntime`.
-- No database, auth, Docker, or training pipeline is included.
+3. **Observability & Health**
+   - Offline ML Evaluation Dashboard
+   - Real-time User Feedback Tracking
+   - Health and Readiness Probes (`/health`, `/ready`)
+
+## Testing
+
+Run the full test suite (API, ML pipelines, Integration, Unit):
+```bash
+pytest tests/ -v
+```
+
+## Docker
+
+Build and run with docker-compose:
+```bash
+docker-compose up --build
+```
+This will start the FastAPI backend, the RQ background worker, and a Redis instance.

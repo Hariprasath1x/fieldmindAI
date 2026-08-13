@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { UploadCloud, Image as ImageIcon, X } from 'lucide-react';
+import { UploadCloud, X } from 'lucide-react';
 
 export default function UploadBox({ onUpload, isLoading }) {
   const [dragActive, setDragActive] = useState(false);

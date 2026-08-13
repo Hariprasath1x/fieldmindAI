@@ -15,6 +15,8 @@ import Register from './pages/Register'
 import EquipmentMarketplace from './pages/EquipmentMarketplace'
 import FarmWorkforce from './pages/FarmWorkforce'
 import Dashboard from './pages/Dashboard'
+import DiagnosisHistory from './pages/DiagnosisHistory'
+import MLDashboard from './pages/MLDashboard'
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
               <Route path="/equipment" element={<EquipmentMarketplace />} />
               <Route path="/workforce" element={<FarmWorkforce />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/diagnosis-history" element={<DiagnosisHistory />} />
+              <Route path="/ml-dashboard" element={<MLDashboard />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/about" element={<About />} />

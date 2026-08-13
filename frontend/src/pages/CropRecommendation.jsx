@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
-import { Droplets, Thermometer, Wind, Beaker, CloudRain, Activity, MapPin, Edit2, AlertCircle, Loader2 } from 'lucide-react';
+import { Droplets, Thermometer, Beaker, CloudRain, Activity, MapPin, Edit2, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { recommendCrop, collectLocationData } from '../services/api';
 

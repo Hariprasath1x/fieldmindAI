@@ -30,6 +30,7 @@ export default function WorkerForm({ onClose, onAdded }) {
       onAdded();
       onClose();
     } catch (err) {
+      console.error(err);
       alert('Error adding worker');
     }
     setLoading(false);

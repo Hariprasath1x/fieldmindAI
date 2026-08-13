@@ -22,13 +22,14 @@ export default function EquipmentForm({ onClose, onAdded }) {
         dailyPrice: parseFloat(formData.dailyPrice),
         quantity: parseInt(formData.quantity),
         ownerId: user.uid,
-        ownerName: profile.displayName,
-        ownerPhone: profile.phone
+        ownerName: profile?.displayName || user?.displayName || user?.email || 'Unknown Owner',
+        ownerPhone: profile?.phone || user?.phoneNumber || 'Not provided'
       });
       alert('Equipment added successfully!');
       onAdded();
       onClose();
     } catch (err) {
+      console.error(err);
       alert('Error adding equipment');
     }
     setLoading(false);

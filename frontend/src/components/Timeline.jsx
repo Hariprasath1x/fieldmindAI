@@ -6,7 +6,6 @@ export default function Timeline({ currentStep, steps }) {
       {steps.map((step, index) => {
         const isCompleted = currentStep > index;
         const isCurrent = currentStep === index;
-        const isPending = currentStep < index;
 
         return (
           <div key={index} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">

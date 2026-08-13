@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSystemStatus } from '../services/api';
+
 import { Server, CheckCircle, XCircle } from 'lucide-react';
 
 export default function Settings() {
@@ -26,6 +26,7 @@ export default function Settings() {
           setLoading(false);
         }, 1000);
       } catch (error) {
+        console.error(error);
         setStatus({ backend: 'offline' });
         setLoading(false);
       }

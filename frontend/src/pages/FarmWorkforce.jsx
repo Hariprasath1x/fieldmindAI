@@ -3,7 +3,8 @@ import { useLanguage } from '../hooks/useLanguage';
 import { getWorkers } from '../services/workerApi';
 import { useAuth } from '../hooks/useAuth';
 import { createBooking } from '../services/bookingApi';
-import { Search, MapPin, Phone, Briefcase, Clock, Calendar, CheckCircle2 } from 'lucide-react';
+import { Search, MapPin, Phone, Briefcase, CheckCircle2, Plus, User } from 'lucide-react';
+import WorkerForm from '../components/marketplace/WorkerForm';
 
 export default function FarmWorkforce() {
   const { t } = useLanguage();
@@ -11,6 +12,7 @@ export default function FarmWorkforce() {
   const [workers, setWorkers] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showWorkerForm, setShowWorkerForm] = useState(false);
   
   // Booking Modal
   const [bookingWorker, setBookingWorker] = useState(null);
@@ -50,6 +52,7 @@ export default function FarmWorkforce() {
       alert('Booking request sent successfully!');
       setBookingWorker(null);
     } catch (error) {
+      console.error(error);
       alert('Failed to send booking request.');
     }
   };
@@ -64,15 +67,26 @@ export default function FarmWorkforce() {
     <div className="max-w-6xl mx-auto py-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <h1 className="text-3xl font-bold text-primary">{t('farm_workforce')}</h1>
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-2.5 w-5 h-5 text-text-secondary" />
-          <input 
-            type="text" 
-            placeholder={t('search_workers')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          <button 
+            onClick={() => {
+              if (!user) return alert('Please login first to post a worker profile.');
+              setShowWorkerForm(true);
+            }}
+            className="w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-green-800 transition-colors shadow-sm flex items-center justify-center shrink-0"
+          >
+            <Plus className="w-5 h-5 mr-1" /> Post Worker
+          </button>
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-2.5 w-5 h-5 text-text-secondary" />
+            <input 
+              type="text" 
+              placeholder={t('search_workers')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
         </div>
       </div>
 
@@ -150,6 +164,17 @@ export default function FarmWorkforce() {
             </form>
           </div>
         </div>
+      )}
+      {/* Worker Form Modal */}
+      {showWorkerForm && (
+        <WorkerForm 
+          onClose={() => setShowWorkerForm(false)} 
+          onAdded={() => {
+            setShowWorkerForm(false);
+            fetchWorkers();
+            alert('Worker profile posted successfully!');
+          }} 
+        />
       )}
     </div>
   );

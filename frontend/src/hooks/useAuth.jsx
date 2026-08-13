@@ -16,11 +16,10 @@ export const AuthProvider = ({ children }) => {
       if (currentUser) {
         // Fetch or create profile in backend
         try {
-          const res = await apiClient.post('/api/marketplace/users/sync', {
+          await apiClient.post('/api/marketplace/users/sync', {
             uid: currentUser.uid,
             email: currentUser.email,
-            phone: currentUser.phoneNumber,
-            displayName: currentUser.displayName
+            displayName: currentUser.displayName,
           });
           
           // Get the full profile

@@ -11,7 +11,11 @@ export default function Navbar() {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Disease Detection', path: '/disease-detection' },
+    { name: 'Diagnosis History', path: '/diagnosis-history' },
     { name: 'Crop Recommendation', path: '/crop-recommendation' },
+    { name: 'ML Dashboard', path: '/ml-dashboard' },
+    { name: 'Equipment Marketplace', path: '/equipment' },
+    { name: 'Farm Workforce', path: '/workforce' },
     { name: 'About', path: '/about' },
   ];
 
@@ -27,29 +31,31 @@ export default function Navbar() {
           </div>
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  to={link.path}
-                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    location.pathname === link.path
-                      ? 'bg-secondary text-white'
-                      : 'text-green-100 hover:bg-secondary hover:text-white'
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              ))}
+              {/* Desktop NavLinks Removed as per user request - Sidebar is used instead */}
               
-              {!user && !loading && (
-                <>
-                  <Link to="/login" className="px-4 py-2 rounded-md text-sm font-medium border border-white text-white hover:bg-white hover:text-primary transition-colors">
-                    Login
-                  </Link>
-                  <Link to="/register" className="px-4 py-2 rounded-md text-sm font-bold bg-white text-primary hover:bg-gray-100 transition-colors shadow-sm">
-                    Register
-                  </Link>
-                </>
+              {!loading && (
+                !user ? (
+                  <>
+                    <Link to="/login" className="px-4 py-2 rounded-md text-sm font-medium border border-white text-white hover:bg-white hover:text-primary transition-colors">
+                      Login
+                    </Link>
+                    <Link to="/register" className="px-4 py-2 rounded-md text-sm font-bold bg-white text-primary hover:bg-gray-100 transition-colors shadow-sm">
+                      Register
+                    </Link>
+                  </>
+                ) : (
+                  <div className="flex items-center space-x-4">
+                    <Link to="/dashboard" className="px-4 py-2 rounded-md text-sm font-bold bg-white text-primary hover:bg-gray-100 transition-colors shadow-sm">
+                      Dashboard
+                    </Link>
+                    <button 
+                      onClick={() => auth.signOut()}
+                      className="px-4 py-2 rounded-md text-sm font-medium border border-white text-white hover:bg-red-500 hover:border-red-500 transition-colors"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )
               )}
             </div>
           </div>
@@ -81,6 +87,43 @@ export default function Navbar() {
                 {link.name}
               </Link>
             ))}
+            
+            {!loading && (
+              !user ? (
+                <>
+                  <Link
+                    to="/login"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-green-100 hover:bg-secondary hover:text-white"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="block px-3 py-2 rounded-md text-base font-bold bg-white text-primary mt-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Register
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/dashboard"
+                    className="block px-3 py-2 rounded-md text-base font-bold bg-white text-primary mt-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => { auth.signOut(); setIsMenuOpen(false); }}
+                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-300 hover:bg-secondary hover:text-red-100 mt-2"
+                  >
+                    Logout
+                  </button>
+                </>
+              )
+            )}
           </div>
         </div>
       )}

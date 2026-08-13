@@ -47,6 +47,7 @@ export const getSystemStatus = async () => {
     const response = await apiClient.get('/status');
     return response.data;
   } catch (error) {
+    console.error(error);
     throw new Error('Backend is unavailable');
   }
 };

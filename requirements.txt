@@ -1,11 +1,15 @@
 fastapi
-uvicorn
+uvicorn[standard]
 onnxruntime
 pillow
 numpy
 joblib
 scikit-learn
-streamlit
 requests
 python-multipart
 firebase-admin
+httpx
+pytest
+pytest-asyncio
+rq
+redis

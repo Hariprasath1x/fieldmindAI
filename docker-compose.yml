@@ -1,0 +1,84 @@
+version: "3.9"
+
+# ── FieldMind Production Architecture ────────────────────────────────────────
+#
+#   frontend (React/Vite — served separately or via nginx)
+#       ↓
+#   backend  (FastAPI, port 8002)
+#       ↓
+#   redis    (job queue, port 6379)
+#       ↓
+#   worker   (RQ ML inference worker)
+#
+# Usage:
+#   cp .env.example .env  &&  edit .env
+#   docker-compose up --build
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  redis:
+    image: redis:7-alpine
+    container_name: fieldmind-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fieldmind-backend
+    ports:
+      - "${API_PORT:-8002}:8002"
+    env_file:
+      - .env
+    environment:
+      - ASYNC_INFERENCE_ENABLED=true
+      - REDIS_URL=redis://redis:6379/0
+      - MODELS_DIR=/app/models
+    volumes:
+      # Mount service account JSON at runtime (not baked into image)
+      - ./backend/firebase_service_account.json:/app/backend/firebase_service_account.json:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 90s
+      retries: 3
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: fieldmind-worker
+    env_file:
+      - .env
+    environment:
+      - ASYNC_INFERENCE_ENABLED=true
+      - REDIS_URL=redis://redis:6379/0
+      - MODELS_DIR=/app/models
+    volumes:
+      - ./backend/firebase_service_account.json:/app/backend/firebase_service_account.json:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local

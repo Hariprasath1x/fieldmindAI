@@ -3,14 +3,16 @@ import { useLanguage } from '../hooks/useLanguage';
 import { getEquipment } from '../services/equipmentApi';
 import { useAuth } from '../hooks/useAuth';
 import { createBooking } from '../services/bookingApi';
-import { Search, MapPin, Phone, User, Clock, Calendar } from 'lucide-react';
+import { Search, MapPin, Phone, User, Plus } from 'lucide-react';
+import EquipmentForm from '../components/marketplace/EquipmentForm';
 
 export default function EquipmentMarketplace() {
   const { t } = useLanguage();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showEquipmentForm, setShowEquipmentForm] = useState(false);
 
   // Booking Modal State
   const [bookingItem, setBookingItem] = useState(null);
@@ -50,6 +52,7 @@ export default function EquipmentMarketplace() {
       alert('Booking request sent successfully!');
       setBookingItem(null);
     } catch (error) {
+      console.error(error);
       alert('Failed to send booking request.');
     }
   };
@@ -64,15 +67,26 @@ export default function EquipmentMarketplace() {
     <div className="max-w-6xl mx-auto py-8">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <h1 className="text-3xl font-bold text-primary">{t('equipment_rental')}</h1>
-        <div className="relative w-full md:w-72">
-          <Search className="absolute left-3 top-2.5 w-5 h-5 text-text-secondary" />
-          <input 
-            type="text" 
-            placeholder={t('search_equipment')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+          <button 
+            onClick={() => {
+              if (!user) return alert('Please login first to post equipment.');
+              setShowEquipmentForm(true);
+            }}
+            className="w-full sm:w-auto px-4 py-2 bg-primary text-white rounded-md font-medium hover:bg-green-800 transition-colors shadow-sm flex items-center justify-center shrink-0"
+          >
+            <Plus className="w-5 h-5 mr-1" /> Post Equipment
+          </button>
+          <div className="relative w-full md:w-72">
+            <Search className="absolute left-3 top-2.5 w-5 h-5 text-text-secondary" />
+            <input 
+              type="text" 
+              placeholder={t('search_equipment')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
         </div>
       </div>
 
@@ -149,6 +163,17 @@ export default function EquipmentMarketplace() {
             </form>
           </div>
         </div>
+      )}
+      {/* Equipment Form Modal */}
+      {showEquipmentForm && (
+        <EquipmentForm 
+          onClose={() => setShowEquipmentForm(false)} 
+          onAdded={() => {
+            setShowEquipmentForm(false);
+            fetchEquipment();
+            alert('Equipment posted successfully!');
+          }} 
+        />
       )}
     </div>
   );
