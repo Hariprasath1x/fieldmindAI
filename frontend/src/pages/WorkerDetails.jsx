@@ -188,73 +188,81 @@ export default function WorkerDetails() {
               </div>
             )}
 
-            <form onSubmit={handleBooking} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Start Date</label>
-                <input 
-                  type="date" 
-                  value={date} 
-                  onChange={(e) => setDate(e.target.value)} 
-                  required 
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full border border-border bg-background-app p-3 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" 
-                />
+            {user && user.uid === worker.managerId ? (
+              <div className="bg-blue-50 border border-blue-200 text-blue-800 p-6 rounded-xl text-center shadow-inner">
+                <div className="text-3xl mb-3">🛠️</div>
+                <h3 className="text-lg font-bold mb-2">This is your workforce listing</h3>
+                <p className="text-sm">You cannot hire your own workforce listing.</p>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">Time Slot</label>
-                <div className="relative">
-                  <Clock className="absolute left-3 top-3.5 w-4 h-4 text-text-secondary" />
-                  <select 
-                    value={timeSlot} 
-                    onChange={(e) => setTimeSlot(e.target.value)} 
-                    className="w-full border border-border bg-background-app p-3 pl-9 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none appearance-none"
-                  >
-                    <option value="Morning">Morning (8am - 12pm)</option>
-                    <option value="Afternoon">Afternoon (1pm - 5pm)</option>
-                    <option value="Full Day">Full Day</option>
-                  </select>
+            ) : (
+              <form onSubmit={handleBooking} className="space-y-5">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Start Date</label>
+                  <input 
+                    type="date" 
+                    value={date} 
+                    onChange={(e) => setDate(e.target.value)} 
+                    required 
+                    min={new Date().toISOString().split('T')[0]}
+                    className="w-full border border-border bg-background-app p-3 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" 
+                  />
                 </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Duration ({timeSlot === 'Full Day' ? 'Days' : 'Hours'})
-                </label>
-                <input 
-                  type="number" 
-                  min="1"
-                  value={duration} 
-                  onChange={(e) => setDuration(e.target.value)} 
-                  required 
-                  className="w-full border border-border bg-background-app p-3 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" 
-                />
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-xl border border-border mt-6">
-                <div className="flex justify-between items-center text-sm mb-1 text-text-secondary">
-                  <span>Rate</span>
-                  <span>₹{timeSlot === 'Full Day' ? worker.dailyWage : (worker.hourlyWage || worker.dailyWage)} / {timeSlot === 'Full Day' ? 'day' : 'hr'}</span>
+                
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Time Slot</label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-3.5 w-4 h-4 text-text-secondary" />
+                    <select 
+                      value={timeSlot} 
+                      onChange={(e) => setTimeSlot(e.target.value)} 
+                      className="w-full border border-border bg-background-app p-3 pl-9 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none appearance-none"
+                    >
+                      <option value="Morning">Morning (8am - 12pm)</option>
+                      <option value="Afternoon">Afternoon (1pm - 5pm)</option>
+                      <option value="Full Day">Full Day</option>
+                    </select>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center text-sm mb-3 text-text-secondary">
-                  <span>Duration</span>
-                  <span>x {duration} {timeSlot === 'Full Day' ? 'days' : 'hrs'}</span>
+                
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    Duration ({timeSlot === 'Full Day' ? 'Days' : 'Hours'})
+                  </label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    value={duration} 
+                    onChange={(e) => setDuration(e.target.value)} 
+                    required 
+                    className="w-full border border-border bg-background-app p-3 rounded-xl focus:ring-2 focus:ring-primary focus:outline-none" 
+                  />
                 </div>
-                <div className="flex justify-between items-center pt-3 border-t border-gray-200">
-                  <span className="font-bold text-text-primary">Estimated Total</span>
-                  <span className="font-bold text-xl text-primary">₹{calculatePreviewPrice()}</span>
+                
+                <div className="bg-gray-50 p-4 rounded-xl border border-border mt-6">
+                  <div className="flex justify-between items-center text-sm mb-1 text-text-secondary">
+                    <span>Rate</span>
+                    <span>₹{timeSlot === 'Full Day' ? worker.dailyWage : (worker.hourlyWage || worker.dailyWage)} / {timeSlot === 'Full Day' ? 'day' : 'hr'}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm mb-3 text-text-secondary">
+                    <span>Duration</span>
+                    <span>x {duration} {timeSlot === 'Full Day' ? 'days' : 'hrs'}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 border-t border-gray-200">
+                    <span className="font-bold text-text-primary">Estimated Total</span>
+                    <span className="font-bold text-xl text-primary">₹{calculatePreviewPrice()}</span>
+                  </div>
+                  <p className="text-xs text-text-secondary mt-2 text-center">Final price will be confirmed.</p>
                 </div>
-                <p className="text-xs text-text-secondary mt-2 text-center">Final price will be confirmed.</p>
-              </div>
 
-              <button 
-                type="submit" 
-                disabled={bookingLoading}
-                className="w-full py-3.5 bg-primary text-white rounded-xl font-bold hover:bg-green-800 transition-colors shadow-sm disabled:opacity-60"
-              >
-                {bookingLoading ? 'Sending Request...' : 'Send Hiring Request'}
-              </button>
-            </form>
+                <button 
+                  type="submit" 
+                  disabled={bookingLoading}
+                  className="w-full py-3.5 bg-primary text-white rounded-xl font-bold hover:bg-green-800 transition-colors shadow-sm disabled:opacity-60"
+                >
+                  {bookingLoading ? 'Sending Request...' : 'Send Hiring Request'}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ import {
   sendPasswordResetEmail,
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 
@@ -135,9 +135,12 @@ function EmailTab({ onSuccess }) {
           <form onSubmit={handlePasswordReset} className="space-y-3">
             {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm">{error}</div>}
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Email</label>
+              <label htmlFor="reset-email" className="block text-sm font-medium text-text-secondary mb-1">Email</label>
               <input
+                id="reset-email"
+                name="email"
                 type="email"
+                autoComplete="email"
                 value={resetEmail || email}
                 onChange={(e) => setResetEmail(e.target.value)}
                 className="w-full px-4 py-2.5 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-card"
@@ -157,10 +160,12 @@ function EmailTab({ onSuccess }) {
     <form onSubmit={handleLogin} className="space-y-4">
       {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium">{error}</div>}
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Email</label>
+        <label htmlFor="email-input" className="block text-sm font-medium text-text-secondary mb-1">Email</label>
         <input
           id="email-input"
+          name="email"
           type="email"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full px-4 py-2.5 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-card"
@@ -168,10 +173,12 @@ function EmailTab({ onSuccess }) {
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Password</label>
+        <label htmlFor="password-input" className="block text-sm font-medium text-text-secondary mb-1">Password</label>
         <input
           id="password-input"
+          name="password"
           type="password"
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="w-full px-4 py-2.5 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary bg-card"
@@ -200,21 +207,24 @@ function EmailTab({ onSuccess }) {
 export default function Login() {
   const [tab, setTab] = useState('google');
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
   const { user, loading: authLoading } = useAuth();
 
+  const from = location.state?.from?.pathname || '/';
+
   // Auto-redirect: if Firebase already has an authenticated user (e.g. after
-  // Google popup completes and onAuthStateChanged fires), go to home.
+  // Google popup completes and onAuthStateChanged fires), go to destination.
   // Depends on `user` only — not `profile` — so it fires immediately.
   useEffect(() => {
     if (!authLoading && user) {
-      console.log('[AUTH] User detected on Login page. Redirecting to /');
-      navigate('/', { replace: true });
+      console.log(`[AUTH] User detected on Login page. Redirecting to ${from}`);
+      navigate(from, { replace: true });
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, from]);
 
   const handleSuccess = () => {
-    navigate('/');
+    navigate(from, { replace: true });
   };
 
   return (

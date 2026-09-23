@@ -62,24 +62,24 @@ export default function Register() {
         
         <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Full Name</label>
-            <input name="name" type="text" onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required />
+            <label htmlFor="reg-name" className="block text-sm font-medium text-text-secondary mb-1">Full Name</label>
+            <input id="reg-name" name="name" type="text" autoComplete="name" onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Email</label>
-            <input name="email" type="email" onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required />
+            <label htmlFor="reg-email" className="block text-sm font-medium text-text-secondary mb-1">Email</label>
+            <input id="reg-email" name="email" type="email" autoComplete="email" onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Password</label>
-            <input name="password" type="password" onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required minLength="6" />
+            <label htmlFor="reg-password" className="block text-sm font-medium text-text-secondary mb-1">Password</label>
+            <input id="reg-password" name="password" type="password" autoComplete="new-password" onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required minLength="6" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Phone Number</label>
-            <input name="phone" type="text" onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required />
+            <label htmlFor="reg-phone" className="block text-sm font-medium text-text-secondary mb-1">Phone Number</label>
+            <input id="reg-phone" name="phone" type="tel" autoComplete="tel" onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary" required />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Preferred Language</label>
-            <select name="language" onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
+            <label htmlFor="reg-language" className="block text-sm font-medium text-text-secondary mb-1">Preferred Language</label>
+            <select id="reg-language" name="language" onChange={handleChange} className="w-full px-4 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary">
               <option value="en">English</option>
               <option value="ta">Tamil</option>
             </select>

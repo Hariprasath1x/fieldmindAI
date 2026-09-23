@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import apiClient from '../services/api';
 
 export default function MobileNumber() {
-  const { user, profile } = useAuth();
+  const { user, profile, setProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [phone, setPhone] = useState('');
@@ -14,9 +14,14 @@ export default function MobileNumber() {
   // The intended destination if redirected from a protected route
   const from = location.state?.from?.pathname || '/';
 
-  // If we already have a phone number on the profile, just go to the destination
+  React.useEffect(() => {
+    // If we already have a phone number on the profile, just go to the destination
+    if (profile && profile.phone) {
+      navigate(from, { replace: true });
+    }
+  }, [profile, navigate, from]);
+
   if (profile && profile.phone) {
-    navigate(from, { replace: true });
     return null;
   }
 
@@ -29,8 +34,9 @@ export default function MobileNumber() {
         uid: user.uid,
         phone: phone
       });
-      // Once saved, force a refresh or navigate so the app updates its state
-      window.location.href = from;
+      // Update local profile state
+      setProfile(prev => ({ ...prev, phone: phone }));
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.response?.data?.detail || 'Failed to save mobile number. Please try again.');
     }
@@ -56,9 +62,12 @@ export default function MobileNumber() {
 
         <form onSubmit={handleSavePhone} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Mobile Number</label>
+            <label htmlFor="phone" className="block text-sm font-medium text-text-secondary mb-1">Mobile Number</label>
             <input
+              id="phone"
+              name="phone"
               type="tel"
+              autoComplete="tel"
               placeholder="+919876543210"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}

@@ -66,6 +66,24 @@ export default function EquipmentMarketplace() {
 
       {loading ? (
         <div className="text-center py-10">Loading...</div>
+      ) : filteredItems.length === 0 ? (
+        <div className="text-center py-20 bg-card border border-border rounded-xl shadow-sm mt-8">
+          <div className="text-5xl mb-4">🚜</div>
+          <h3 className="text-xl font-bold text-text-primary mb-2">No equipment found</h3>
+          <p className="text-text-secondary max-w-md mx-auto mb-6">
+            {search 
+              ? `We couldn't find any equipment matching "${search}". Try adjusting your search.`
+              : 'There is no equipment available in the marketplace yet. Be the first to post!'}
+          </p>
+          {search && (
+            <button 
+              onClick={() => setSearch('')}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition-colors"
+            >
+              Clear Search
+            </button>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredItems.map(item => (
@@ -75,6 +93,11 @@ export default function EquipmentMarketplace() {
                   <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="flex items-center justify-center w-full h-full text-gray-400">No Image</div>
+                )}
+                {user && user.uid === item.ownerId && (
+                  <div className="absolute top-2 left-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs font-bold shadow-sm border border-blue-200">
+                    Your Listing
+                  </div>
                 )}
                 <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded-md text-xs font-bold shadow-sm">
                   {item.category}

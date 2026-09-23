@@ -31,14 +31,18 @@ export const AuthProvider = ({ children }) => {
 
         // Sync to backend in the background (non-blocking)
         try {
-          await apiClient.post('/api/marketplace/users/sync', {
+          const syncPayload = {
             uid: currentUser.uid,
             email: currentUser.email || '',
             displayName: currentUser.displayName || 'User',
-            phone: currentUser.phoneNumber || '',
             role: 'User',
             language: 'en',
-          });
+          };
+          if (currentUser.phoneNumber) {
+            syncPayload.phone = currentUser.phoneNumber;
+          }
+          await apiClient.post('/api/marketplace/users/sync', syncPayload);
+          
           const profileRes = await apiClient.get(`/api/marketplace/users/${currentUser.uid}`);
           setProfile(profileRes.data); // upgrade to full backend profile
         } catch (error) {
@@ -55,7 +59,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading }}>
+    <AuthContext.Provider value={{ user, profile, loading, setProfile }}>
       {!loading && children}
     </AuthContext.Provider>
   );

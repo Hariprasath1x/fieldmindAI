@@ -71,7 +71,11 @@ function App() {
                   <WorkerDetails />
                 </RequireMobileNumber>
               } />
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard" element={
+                <RequireMobileNumber>
+                  <Dashboard />
+                </RequireMobileNumber>
+              } />
               <Route path="/diagnosis-history" element={<DiagnosisHistory />} />
               <Route path="/ml-dashboard" element={<MLDashboard />} />
               <Route path="/mobile-number" element={<MobileNumber />} />

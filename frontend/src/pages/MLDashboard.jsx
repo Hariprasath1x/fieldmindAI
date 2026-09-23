@@ -78,7 +78,7 @@ function ModelEvaluationCard({ modelData }) {
 }
 
 export default function MLDashboard() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [mlData, setMlData] = useState(null);
   const [feedbackData, setFeedbackData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -96,15 +96,19 @@ export default function MLDashboard() {
         setMlData(mlRes);
 
         // Feedback dashboard is admin-only
-        try {
-          const fbRes = await getFeedbackDashboard(user.uid);
-          setFeedbackData(fbRes);
-        } catch (err) {
-          if (err.response?.status === 403) {
-            setAccessDenied(true);
-          } else {
-            console.error('Feedback dashboard error:', err);
+        if (profile?.role === 'admin' || profile?.role === 'developer') {
+          try {
+            const fbRes = await getFeedbackDashboard(user.uid);
+            setFeedbackData(fbRes);
+          } catch (err) {
+            if (err.response?.status === 403) {
+              setAccessDenied(true);
+            } else {
+              console.error('Feedback dashboard error:', err);
+            }
           }
+        } else {
+          setAccessDenied(true);
         }
       } catch (err) {
         console.error(err);

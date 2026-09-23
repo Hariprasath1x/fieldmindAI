@@ -23,6 +23,12 @@ export default function Dashboard() {
   const [myEquipment, setMyEquipment] = useState([]);
   const [myWorkers, setMyWorkers] = useState([]);
 
+  const [actionLoading, setActionLoading] = useState({});
+
+  const setAction = (id, loading) => {
+    setActionLoading(prev => ({ ...prev, [id]: loading }));
+  };
+
   const fetchData = useCallback(async () => {
     try {
       const oRes = await getOwnerBookings(user.uid);
@@ -50,32 +56,47 @@ export default function Dashboard() {
   }, [user, profile, loading, navigate, fetchData]);
 
   const handleStatusChange = async (id, status) => {
+    if (actionLoading[id]) return;
+    setAction(id, true);
     try {
       await updateBookingStatus(id, status);
-      fetchData(); // refresh
+      await fetchData(); // refresh
     } catch (e) {
       console.error(e);
-      alert("Failed to update status");
+      // Suppress alert for graceful 400 backend rejections (already handled)
+      if (e.response?.status !== 400 && e.response?.status !== 409) {
+        alert(e.response?.data?.detail || "Failed to update status");
+      }
+    } finally {
+      setAction(id, false);
     }
   };
 
   const handleDeleteEquipment = async (id) => {
-    if(!window.confirm('Are you sure you want to delete this equipment?')) return;
+    if (actionLoading[id]) return;
+    if (!window.confirm('Are you sure you want to delete this equipment?')) return;
+    setAction(id, true);
     try {
       await deleteEquipment(id);
-      fetchData();
+      await fetchData();
     } catch (e) {
       alert(e.response?.data?.detail || "Failed to delete equipment.");
+    } finally {
+      setAction(id, false);
     }
   };
 
   const handleDeleteWorker = async (id) => {
-    if(!window.confirm('Are you sure you want to delete this worker?')) return;
+    if (actionLoading[id]) return;
+    if (!window.confirm('Are you sure you want to delete this worker?')) return;
+    setAction(id, true);
     try {
       await deleteWorker(id);
-      fetchData();
+      await fetchData();
     } catch (e) {
       alert(e.response?.data?.detail || "Failed to delete worker.");
+    } finally {
+      setAction(id, false);
     }
   };
 
@@ -149,7 +170,9 @@ export default function Dashboard() {
                       </div>
                       <div className="flex space-x-2 border-t border-border pt-3 mt-2">
                         <button onClick={() => { setEditingEquipment(item); setShowEquipmentForm(true); }} className="flex-1 bg-gray-50 text-gray-700 py-1.5 rounded-md font-medium text-xs hover:bg-gray-200 border border-border">Edit</button>
-                        <button onClick={() => handleDeleteEquipment(item.id)} className="flex-1 bg-red-50 text-red-600 py-1.5 rounded-md font-medium text-xs hover:bg-red-100 border border-red-100">Delete</button>
+                        <button onClick={() => handleDeleteEquipment(item.id)} disabled={actionLoading[item.id]} className="flex-1 bg-red-50 text-red-600 py-1.5 rounded-md font-medium text-xs hover:bg-red-100 border border-red-100 disabled:opacity-50">
+                          {actionLoading[item.id] ? 'Deleting...' : 'Delete'}
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -170,7 +193,9 @@ export default function Dashboard() {
                       </div>
                       <div className="flex space-x-2 border-t border-border pt-3 mt-2">
                         <button onClick={() => { setEditingWorker(worker); setShowWorkerForm(true); }} className="flex-1 bg-gray-50 text-gray-700 py-1.5 rounded-md font-medium text-xs hover:bg-gray-200 border border-border">Edit</button>
-                        <button onClick={() => handleDeleteWorker(worker.id)} className="flex-1 bg-red-50 text-red-600 py-1.5 rounded-md font-medium text-xs hover:bg-red-100 border border-red-100">Delete</button>
+                        <button onClick={() => handleDeleteWorker(worker.id)} disabled={actionLoading[worker.id]} className="flex-1 bg-red-50 text-red-600 py-1.5 rounded-md font-medium text-xs hover:bg-red-100 border border-red-100 disabled:opacity-50">
+                          {actionLoading[worker.id] ? 'Deleting...' : 'Delete'}
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -219,18 +244,18 @@ export default function Dashboard() {
 
                   {b.status === 'Pending' && (
                     <div className="flex space-x-2 border-t border-border pt-3 mt-3">
-                      <button onClick={() => handleStatusChange(b.id, 'Approved')} className="flex-1 bg-primary text-white py-1.5 rounded-md font-medium text-xs hover:bg-green-800">
-                        Approve
+                      <button onClick={() => handleStatusChange(b.id, 'Approved')} disabled={actionLoading[b.id]} className="flex-1 bg-primary text-white py-1.5 rounded-md font-medium text-xs hover:bg-green-800 disabled:opacity-50">
+                        {actionLoading[b.id] ? '...' : 'Approve'}
                       </button>
-                      <button onClick={() => handleStatusChange(b.id, 'Rejected')} className="flex-1 bg-red-50 text-red-600 py-1.5 rounded-md font-medium text-xs hover:bg-red-100">
-                        Reject
+                      <button onClick={() => handleStatusChange(b.id, 'Rejected')} disabled={actionLoading[b.id]} className="flex-1 bg-red-50 text-red-600 py-1.5 rounded-md font-medium text-xs hover:bg-red-100 disabled:opacity-50">
+                        {actionLoading[b.id] ? '...' : 'Reject'}
                       </button>
                     </div>
                   )}
                   {b.status === 'Approved' && (
                     <div className="flex space-x-2 border-t border-border pt-3 mt-3">
-                      <button onClick={() => handleStatusChange(b.id, 'Completed')} className="flex-1 bg-blue-600 text-white py-1.5 rounded-md font-medium text-xs hover:bg-blue-700">
-                        Mark as Completed
+                      <button onClick={() => handleStatusChange(b.id, 'Completed')} disabled={actionLoading[b.id]} className="flex-1 bg-blue-600 text-white py-1.5 rounded-md font-medium text-xs hover:bg-blue-700 disabled:opacity-50">
+                        {actionLoading[b.id] ? 'Processing...' : 'Mark as Completed'}
                       </button>
                     </div>
                   )}
@@ -278,14 +303,15 @@ export default function Dashboard() {
                   {(b.status === 'Pending' || b.status === 'Approved') && (
                     <div className="flex space-x-2 border-t border-border pt-3 mt-3">
                       <button 
+                        disabled={actionLoading[b.id]}
                         onClick={() => {
                           if(window.confirm('Are you sure you want to cancel this booking?')) {
                             handleStatusChange(b.id, 'Cancelled');
                           }
                         }} 
-                        className="flex-1 bg-red-50 text-red-600 py-1.5 rounded-md font-medium text-xs hover:bg-red-100"
+                        className="flex-1 bg-red-50 text-red-600 py-1.5 rounded-md font-medium text-xs hover:bg-red-100 disabled:opacity-50"
                       >
-                        Cancel Booking
+                        {actionLoading[b.id] ? 'Cancelling...' : 'Cancel Booking'}
                       </button>
                     </div>
                   )}

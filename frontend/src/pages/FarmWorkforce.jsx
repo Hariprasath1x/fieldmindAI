@@ -66,12 +66,37 @@ export default function FarmWorkforce() {
 
       {loading ? (
         <div className="text-center py-10">Loading...</div>
+      ) : filteredWorkers.length === 0 ? (
+        <div className="text-center py-20 bg-card border border-border rounded-xl shadow-sm mt-8">
+          <div className="text-5xl mb-4">🧑‍🌾</div>
+          <h3 className="text-xl font-bold text-text-primary mb-2">No workers found</h3>
+          <p className="text-text-secondary max-w-md mx-auto mb-6">
+            {search 
+              ? `We couldn't find any workforce profiles matching "${search}". Try adjusting your search.`
+              : 'There are no workforce profiles available yet. Be the first to post a profile!'}
+          </p>
+          {search && (
+            <button 
+              onClick={() => setSearch('')}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 transition-colors"
+            >
+              Clear Search
+            </button>
+          )}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredWorkers.map(worker => (
             <div key={worker.id} className="bg-card border-2 border-border rounded-xl shadow-sm p-6 flex flex-col relative">
-              <div className="absolute top-4 right-4 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold flex items-center">
-                <CheckCircle2 className="w-3 h-3 mr-1" /> {worker.status}
+              <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                <div className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-bold flex items-center">
+                  <CheckCircle2 className="w-3 h-3 mr-1" /> {worker.status}
+                </div>
+                {user && user.uid === worker.managerId && (
+                  <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-xs font-bold shadow-sm border border-blue-200">
+                    Your Listing
+                  </div>
+                )}
               </div>
               
               <div className="flex items-center mb-4">

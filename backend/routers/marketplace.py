@@ -207,6 +207,14 @@ def execute_booking_transaction(transaction, db, booking_data: dict, uid: str):
         
     target_data = target_snapshot.to_dict()
     
+    # 1.5 Check Self-Booking
+    if booking_data["type"] == "Equipment":
+        if target_data.get("ownerId") == uid and uid != "mock-uid":
+            raise HTTPException(status_code=403, detail="You cannot book your own equipment")
+    else:
+        if target_data.get("managerId") == uid and uid != "mock-uid":
+            raise HTTPException(status_code=403, detail="You cannot hire your own workforce listing")
+    
     # 2. Check Availability
     query = db.collection("bookings")\
         .where("targetId", "==", booking_data["targetId"])\
