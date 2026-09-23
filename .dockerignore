@@ -1,0 +1,51 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+*.so
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Secrets (NEVER include in image) ─────────────────────────────────────────
+.env
+backend/firebase_service_account.json
+*.pem
+*.key
+
+# ── Large model files (mounted as volumes in production) ─────────────────────
+# Models are copied into the image via Dockerfile — exclude heavy extras
+models/*.pth
+models/*.zip
+models/FieldMind_LeafVerifier_v1.zip
+
+# ── Frontend (served separately) ─────────────────────────────────────────────
+frontend/
+frontend_streamlit_backup/
+
+# ── Test artefacts ────────────────────────────────────────────────────────────
+tests/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# ── Evaluation results (runtime generated, not baked in) ─────────────────────
+evaluation/results/
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+*.md
+*.pdf
+*.bat
+*.ps1
+*.cmd
+node_modules/
