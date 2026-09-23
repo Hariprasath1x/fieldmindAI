@@ -1,0 +1,36 @@
+# Environment Variables
+.env
+.env.*
+
+# Secrets / Credentials
+firebase_service_account.json
+credentials/
+secrets/
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Node / Frontend
+node_modules/
+dist/
+build/
+.npm/
+
+# Logs
+*.log
+
+# OS Files
+.DS_Store
+Thumbs.db

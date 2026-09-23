@@ -1,0 +1,35 @@
+# FieldMind ML Worker — Dockerfile
+#
+# Shares the same base as the API server but runs an RQ worker process
+# that processes inference jobs from the Redis queue.
+
+FROM python:3.11-slim AS builder
+WORKDIR /build
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential gcc \
+    && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+# Install rq for the queue
+RUN pip install --no-cache-dir --prefix=/install rq redis
+
+FROM python:3.11-slim AS runtime
+
+RUN useradd -m -u 1001 fieldmind
+
+WORKDIR /app
+
+COPY --from=builder /install /usr/local
+COPY backend/ ./backend/
+COPY models/ ./models/
+
+RUN chown -R fieldmind:fieldmind /app
+
+USER fieldmind
+
+ENV FIELDMIND_ENV=production \
+    LOG_LEVEL=INFO \
+    MODELS_DIR=/app/models \
+    ASYNC_INFERENCE_ENABLED=true
+
+# Worker entrypoint: starts RQ worker consuming the "inference" queue
+CMD ["python", "-m", "rq", "worker", "inference", "--url", "${REDIS_URL:-redis://redis:6379/0}"]

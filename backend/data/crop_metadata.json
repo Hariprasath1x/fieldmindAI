@@ -1,0 +1,146 @@
+{
+  "rice": {
+    "season": "Kharif",
+    "water_requirement": "High",
+    "water_range": "1200-1600 mm",
+    "difficulty": "Moderate",
+    "ideal_conditions": {
+      "temperature": {"min": 20, "max": 40},
+      "humidity": {"min": 60, "max": 80},
+      "ph": {"min": 5.5, "max": 7.0},
+      "rainfall": {"min": 1000, "max": 2000},
+      "nitrogen": {"min": 80},
+      "phosphorus": {"min": 40},
+      "potassium": {"min": 40}
+    },
+    "description": "A major staple crop that thrives in waterlogged conditions."
+  },
+  "maize": {
+    "season": "Kharif",
+    "water_requirement": "Medium",
+    "water_range": "500-800 mm",
+    "difficulty": "Easy",
+    "ideal_conditions": {
+      "temperature": {"min": 18, "max": 27},
+      "humidity": {"min": 55, "max": 75},
+      "ph": {"min": 5.5, "max": 7.5},
+      "rainfall": {"min": 500, "max": 800},
+      "nitrogen": {"min": 60},
+      "phosphorus": {"min": 35},
+      "potassium": {"min": 35}
+    },
+    "description": "A versatile crop that grows well in diverse climates."
+  },
+  "jute": {
+    "season": "Kharif",
+    "water_requirement": "High",
+    "water_range": "1500-2000 mm",
+    "difficulty": "Moderate",
+    "ideal_conditions": {
+      "temperature": {"min": 24, "max": 37},
+      "humidity": {"min": 70, "max": 90},
+      "ph": {"min": 6.0, "max": 7.5},
+      "rainfall": {"min": 1500, "max": 2000},
+      "nitrogen": {"min": 60},
+      "phosphorus": {"min": 40},
+      "potassium": {"min": 40}
+    },
+    "description": "Requires warm and humid climate with abundant rainfall."
+  },
+  "cotton": {
+    "season": "Kharif",
+    "water_requirement": "Medium",
+    "water_range": "700-1200 mm",
+    "difficulty": "Advanced",
+    "ideal_conditions": {
+      "temperature": {"min": 21, "max": 30},
+      "humidity": {"min": 50, "max": 70},
+      "ph": {"min": 5.8, "max": 8.0},
+      "rainfall": {"min": 500, "max": 1000},
+      "nitrogen": {"min": 100},
+      "phosphorus": {"min": 40},
+      "potassium": {"min": 40}
+    },
+    "description": "A major cash crop highly susceptible to pests."
+  },
+  "coconut": {
+    "season": "Year Round",
+    "water_requirement": "High",
+    "water_range": "1500-2500 mm",
+    "difficulty": "Moderate",
+    "ideal_conditions": {
+      "temperature": {"min": 27, "max": 32},
+      "humidity": {"min": 80, "max": 90},
+      "ph": {"min": 5.2, "max": 8.0},
+      "rainfall": {"min": 1500, "max": 2500},
+      "nitrogen": {"min": 20},
+      "phosphorus": {"min": 10},
+      "potassium": {"min": 30}
+    },
+    "description": "Thrives in coastal and humid tropical regions."
+  },
+  "papaya": {
+    "season": "Year Round",
+    "water_requirement": "Medium",
+    "water_range": "1000-1500 mm",
+    "difficulty": "Moderate",
+    "ideal_conditions": {
+      "temperature": {"min": 22, "max": 26},
+      "humidity": {"min": 60, "max": 80},
+      "ph": {"min": 6.0, "max": 6.5},
+      "rainfall": {"min": 1000, "max": 1500},
+      "nitrogen": {"min": 40},
+      "phosphorus": {"min": 40},
+      "potassium": {"min": 40}
+    },
+    "description": "Highly sensitive to waterlogging and frost."
+  },
+  "apple": {
+    "season": "Rabi",
+    "water_requirement": "Medium",
+    "water_range": "1000-1250 mm",
+    "difficulty": "Advanced",
+    "ideal_conditions": {
+      "temperature": {"min": 21, "max": 24},
+      "humidity": {"min": 70, "max": 80},
+      "ph": {"min": 5.5, "max": 6.5},
+      "rainfall": {"min": 1000, "max": 1250},
+      "nitrogen": {"min": 20},
+      "phosphorus": {"min": 120},
+      "potassium": {"min": 190}
+    },
+    "description": "Requires significant chilling hours during winter."
+  },
+  "banana": {
+    "season": "Year Round",
+    "water_requirement": "High",
+    "water_range": "1500-2500 mm",
+    "difficulty": "Moderate",
+    "ideal_conditions": {
+      "temperature": {"min": 26, "max": 30},
+      "humidity": {"min": 75, "max": 85},
+      "ph": {"min": 6.5, "max": 7.5},
+      "rainfall": {"min": 1500, "max": 2500},
+      "nitrogen": {"min": 80},
+      "phosphorus": {"min": 70},
+      "potassium": {"min": 40}
+    },
+    "description": "Needs consistently high moisture and fertile soil."
+  },
+  "lentil": {
+    "season": "Rabi",
+    "water_requirement": "Low",
+    "water_range": "300-400 mm",
+    "difficulty": "Easy",
+    "ideal_conditions": {
+      "temperature": {"min": 15, "max": 25},
+      "humidity": {"min": 20, "max": 30},
+      "ph": {"min": 5.5, "max": 7.0},
+      "rainfall": {"min": 300, "max": 500},
+      "nitrogen": {"min": 10},
+      "phosphorus": {"min": 40},
+      "potassium": {"min": 20}
+    },
+    "description": "A hardy pulse crop that fixes its own nitrogen."
+  }
+}

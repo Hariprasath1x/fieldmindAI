@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+onnxruntime
+pillow
+numpy
+joblib
+scikit-learn
+requests
+python-multipart
+firebase-admin
+httpx
+pytest
+pytest-asyncio
+rq
+redis

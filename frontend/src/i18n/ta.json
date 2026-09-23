@@ -1,0 +1,14 @@
+{
+  "welcome": "FieldMind சந்தைக்கு வரவேற்கிறோம்",
+  "login": "உள்நுழை",
+  "register": "பதிவு செய்",
+  "logout": "வெளியேறு",
+  "equipment_rental": "உபகரணங்கள் வாடகை",
+  "farm_workforce": "பண்ணை பணியாளர்கள்",
+  "dashboard": "முகப்பு",
+  "book_now": "முன்பதிவு செய்",
+  "search_equipment": "உபகரணங்களை தேடு...",
+  "search_workers": "பணியாளர்களை தேடு...",
+  "hourly": "ஒரு மணி நேரத்திற்கு",
+  "daily": "ஒரு நாளைக்கு"
+}
