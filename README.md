@@ -1,168 +1,188 @@
 # FieldMind 🌾
 
-An intelligent agricultural platform combining machine learning for crop and disease diagnostics with a robust, real-time marketplace for farm equipment and workforce hiring.
+**AI-Powered Agricultural Assistance Platform**
 
-[![Python](https://img.shields.io/badge/Python-3.10-blue.svg)](https://www.python.org/)
+FieldMind is a full-stack web application that integrates Deep Learning, Computer Vision, and modern web technologies to provide crop disease detection, intelligent crop recommendations, and a peer-to-peer agricultural marketplace.
+
+Built as a B.Tech Computer Science final-year project demonstrating:
+- End-to-end AI/ML integration in a production-style web application
+- PyTorch model training → ONNX export → FastAPI inference deployment
+- React + FastAPI full-stack development
+- Firebase authentication and Firestore database
+
+[![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688.svg?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-19.2-61DAFB.svg?logo=react)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-8.2-646CFF.svg?logo=vite)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.3-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
+[![React](https://img.shields.io/badge/React-19-61DAFB.svg?logo=react)](https://react.dev/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.x-EE4C2C.svg?logo=pytorch)](https://pytorch.org/)
+[![ONNX](https://img.shields.io/badge/ONNX-Runtime-005CED.svg)](https://onnxruntime.ai/)
 [![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-FFCA28.svg?logo=firebase)](https://firebase.google.com/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker)](https://www.docker.com/)
 
 ---
 
 ## Table of Contents
-- [Overview](#overview)
+- [Project Overview](#project-overview)
 - [Key Features](#key-features)
-  - [Authentication](#authentication)
-  - [Agriculture / AI](#agriculture--ai)
-  - [Marketplace](#marketplace)
-  - [Security](#security)
-- [System Architecture](#system-architecture)
-- [Project Structure](#project-structure)
-- [Running Locally](#running-locally)
+- [Architecture](#architecture)
+- [ML Pipeline](#ml-pipeline)
+- [Technology Stack](#technology-stack)
+- [Setup & Running Locally](#setup--running-locally)
+- [Example Workflow](#example-workflow)
+- [Known Limitations](#known-limitations)
 
 ---
 
-## Overview
+## Project Overview
 
-FieldMind solves two critical challenges for modern farmers:
-1. **Agronomic Intelligence:** Leveraging computer vision and machine learning to rapidly detect plant diseases and recommend optimal crops based on localized soil and weather conditions.
-2. **Resource Allocation:** Providing a trusted, transparent, and transactional peer-to-peer marketplace for renting heavy farming equipment and hiring specialized agricultural workforces.
+FieldMind solves two real challenges for smallholder farmers:
 
-Built on a decoupled, highly-scalable architecture, FieldMind uses a React + Tailwind frontend that communicates via Firebase ID Tokens to a strict, authoritative FastAPI Python backend. Data and transactions are safely synchronized to Google Firestore.
+1. **Disease Diagnosis**: A computer vision pipeline that accepts a leaf photograph and returns a disease classification, severity localisation (bounding boxes via YOLO), and a treatment recommendation — all within ~1 second.
+
+2. **Resource Management**: A transactional peer-to-peer marketplace for renting farming equipment and hiring agricultural workers, with booking lifecycle management and Firestore ACID transaction guarantees.
 
 ---
 
 ## Key Features
 
-### Authentication
-- **Firebase Authentication:** Secure, native integration supporting Google Sign-In and Email/Password credentials.
-- **Session Persistence:** State survives page refreshes and redirects seamlessly.
-- **Mobile-Number Requirement:** Mandatory profile completion gate ensuring all marketplace actors are reachable.
-- **Profile Synchronization:** Decentralized Auth syncing automatically to centralized Firestore user documents.
-
-### Agriculture / AI
-- **Disease Detection:** Asynchronous, queue-based (Redis/RQ) computer vision pipeline detecting diseases with severity scoring and bounding box localization.
-- **Leaf Verification:** Pre-processing ONNX model to reject invalid/non-leaf imagery before expensive inference.
-- **Crop Recommendation:** Scikit-learn predictive modeling fusing Soil NPK, pH, and localized weather metrics to rank optimal seasonal crops.
-- **Diagnosis History:** Persistent user-tied history of all past AI diagnostics.
-- **Offline ML Evaluation:** Developer/Admin dashboard for tracking prediction feedback and monitoring model drift.
+### AI / Agriculture
+- **Crop Disease Detection** — Upload a leaf photo → disease classification + severity heatmap + treatment recommendation
+- **Leaf Verification** — Pre-processing ONNX gate that rejects obvious non-leaf images before running expensive inference
+- **Crop Recommendation** — Soil N-P-K, pH, temperature, humidity, and rainfall → ranked seasonal crop suggestions
+- **Diagnosis History** — Per-user history of all past diagnoses with progression tracking
+- **Location-Aware Recommendations** — Auto-fill soil and weather parameters from user's GPS location
 
 ### Marketplace
-- **Equipment Marketplace:** Browse, filter, and discover farm machinery (tractors, harvesters, etc.).
-- **Workforce Marketplace:** Directory of skilled agricultural laborers (harvesting, plowing, seeding).
-- **Equipment & Worker Listing:** Empower farmers to monetize their idle assets and time.
-- **Booking Lifecycle:** Full state machine (`Pending` -> `Approved`/`Rejected` -> `Completed` -> `Cancelled`).
-- **Owner Dashboard:** Centralized UI for managing incoming requests and tracking outgoing bookings.
-- **Resource Management:** Safe creation, editing, and deletion of listings.
-- **Availability Validation:** Prevents double-booking of identical slots.
+- **Equipment Rental** — Browse, list, and book farm machinery (tractors, harvesters, etc.)
+- **Farm Workforce** — Directory and booking for skilled agricultural labourers
+- **Full Booking Lifecycle** — Pending → Approved/Rejected → Completed/Cancelled with owner-gated transitions
+- **Conflict Detection** — Transactional double-booking prevention
 
-### Security
-- **Firebase ID Token Verification:** API boundaries are strictly protected by cryptographically verifying bearer tokens against Google's public JWKs.
-- **Backend Authorization:** True role and UID-based access control. The backend never trusts the frontend for `requesterId` or `ownerId`.
-- **Ownership Checks:** Users can only mutate listings and approve bookings they explicitly own.
-- **Self-Booking Prevention:** Owners cannot book their own equipment or hire their own workforce.
-- **Backend Price Authority:** The backend recalculates and enforces transaction pricing, discarding tampered client-side rates.
-- **Transactional Booking:** Firestore ACID transactions prevent race conditions during high-concurrency booking attempts.
-- **Active-Booking Deletion Protection:** Owners cannot delete equipment or workers that have active (Pending/Approved) future commitments.
+### Platform
+- **Firebase Authentication** — Google Sign-In and Email/Password
+- **ML Dashboard** — Offline model evaluation metrics and real-time user feedback tracking
+- **Async Inference** — Redis + RQ worker queue for non-blocking ML inference (graceful sync fallback)
+- **Multilingual Support** — i18n infrastructure (English / தமிழ் scaffold)
 
 ---
 
-## System Architecture
+## Architecture
 
-```mermaid
-flowchart TB
-    %% Entities
-    Client[React Frontend]
-    FirebaseUI[Firebase Auth UI]
-    FastAPI[FastAPI Backend]
-    Worker[RQ Background Worker]
-    
-    %% Databases
-    Firestore[(Google Firestore)]
-    Redis[(Redis Queue)]
-    
-    %% Flows
-    Client -- 1. Login/OAuth --> FirebaseUI
-    FirebaseUI -- 2. ID Token --> Client
-    Client -- 3. REST API + Bearer Token --> FastAPI
-    
-    %% Backend Logic
-    FastAPI -- 4. ACID Transactions --> Firestore
-    FastAPI -- 5. Queue ML Jobs --> Redis
-    Redis -- 6. Consume Jobs --> Worker
-    Worker -- 7. Write Results --> Firestore
-    
-    %% Subsystems
-    subgraph AI Pipeline
-        Worker -. ONNX Leaf Verifier .-> Worker
-        Worker -. Scikit-Learn / YOLO .-> Worker
-    end
+```
+React Frontend (Vite + Tailwind)
+        │
+        │  REST API + Firebase Bearer Token
+        ▼
+FastAPI Backend (Python)
+        │
+        ├── Marketplace Endpoints   ──▶  Firestore (ACID Transactions)
+        │
+        └── Inference Endpoint
+                │
+                ├── [Sync]  run_inference_job() directly
+                └── [Async] Redis Queue → RQ Worker
+                                │
+                                ▼
+                    ┌─────────────────────────┐
+                    │     ML Pipeline          │
+                    │  1. Image Validation     │
+                    │  2. Leaf Verification    │  ← ONNX MobileNetV3
+                    │  3. Disease Classify     │  ← ONNX EfficientNet
+                    │  4. Severity Detection   │  ← YOLOv8 ONNX
+                    │  5. Recommendation       │  ← Rule-based
+                    │  6. Persist to Firestore │
+                    └─────────────────────────┘
 ```
 
 ---
 
-## Project Structure
+## ML Pipeline
 
-```text
-fieldmind/
-├── frontend/               # React, Vite, Tailwind CSS SPA
-│   ├── src/
-│   │   ├── components/     # Reusable UI (Marketplace forms, Navbars)
-│   │   ├── hooks/          # Custom React hooks (useAuth, useLanguage)
-│   │   ├── pages/          # Full page views (Dashboard, Marketplace, ML)
-│   │   └── services/       # API clients (axios) & Firebase config
-│   ├── index.html          # Vite entrypoint
-│   └── package.json        # Node dependencies
-├── backend/                # FastAPI application
-│   ├── core/               # App configuration, logging, security middleware
-│   ├── db/                 # Firebase Admin SDK initialization
-│   ├── models/             # Pydantic schemas for request/response validation
-│   ├── routers/            # API endpoints (marketplace, diagnosis, inference)
-│   ├── services/           # Business logic & ML inference wrappers
-│   ├── worker/             # RQ task definitions for async ML jobs
-│   └── main.py             # ASGI application entrypoint
-├── models/                 # Serialized ML assets (.onnx, .pkl)
-├── tests/                  # Pytest integration and E2E suites
-├── e2e_tests.py            # Comprehensive Python E2E verification script
-├── docker-compose.yml      # Orchestration for Backend + Worker + Redis
-└── requirements.txt        # Python dependencies
-```
+The disease detection pipeline consists of six sequential stages:
+
+| Stage | Component | Model | Output |
+|-------|-----------|-------|--------|
+| 1 | Image Validation | OpenCV Laplacian | Pass / Reject (blur, size) |
+| 2 | Leaf Verification | MobileNetV3-Small (ONNX) | leaf / non\_leaf |
+| 3 | Disease Classification | EfficientNet (ONNX) | disease label + confidence |
+| 4 | Severity Detection | YOLOv8 (ONNX) | bounding boxes + labels |
+| 5 | Area Estimation | Geometric (bbox union) | affected area % |
+| 6 | Recommendation | Rule-based | treatment text |
+
+**Training:** Models were trained in PyTorch on PlantVillage and domain-augmented datasets, then exported to ONNX for lightweight, framework-agnostic inference via ONNX Runtime.
+
+**Supported classes (examples):** `cashew_anthracnose`, `cassava_brown_spot`, `tomato_septoria_leaf_spot`, `maize_streak_virus`, and 20+ others.
 
 ---
 
-## Running Locally
+## Technology Stack
+
+### Frontend
+| Tool | Purpose |
+|------|---------|
+| React 19 + Vite | SPA framework and dev server |
+| Tailwind CSS | Utility-first styling |
+| Framer Motion | Animations |
+| React Hook Form | Form state management |
+| Axios | HTTP client with auth interceptors |
+
+### Backend
+| Tool | Purpose |
+|------|---------|
+| FastAPI | ASGI API framework |
+| Pydantic | Request/response validation |
+| ONNX Runtime | Cross-platform ML inference |
+| OpenCV + Pillow | Image processing |
+| Joblib + Scikit-learn | Crop recommendation model |
+| Redis + RQ | Async ML job queue |
+
+### ML / AI
+| Tool | Purpose |
+|------|---------|
+| PyTorch | Model training |
+| ONNX | Model export and deployment |
+| MobileNetV3-Small | Leaf verification |
+| EfficientNet | Disease classification |
+| YOLOv8 | Severity/region detection |
+| RandomForest | Crop recommendation |
+
+### Infrastructure
+| Tool | Purpose |
+|------|---------|
+| Firebase Auth | User authentication |
+| Google Firestore | NoSQL database |
+| Firebase Admin SDK | Server-side Firestore access |
+| Docker + Compose | Container orchestration |
+
+---
+
+## Setup & Running Locally
 
 ### Prerequisites
-- Node.js 18+
 - Python 3.10+
-- Redis (for async ML jobs)
-- Firebase Project (with Auth & Firestore enabled)
+- Node.js 18+
+- A Firebase project with **Authentication** and **Firestore** enabled
+- A Firebase Admin SDK service account JSON
 
-### 1. Backend Setup
+### 1. Clone & Setup Backend
 
 ```bash
-# Create a virtual environment
+git clone https://github.com/your-username/fieldmind.git
+cd fieldmind
+
+# Create virtual environment
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure Firebase
-# Place your Firebase Admin SDK service account key at the root:
-# firebase_service_account.json
+# Place Firebase Admin SDK key
+cp /path/to/firebase_service_account.json ./firebase_service_account.json
 
-# Start the FastAPI server
+# Start FastAPI backend
 uvicorn backend.main:app --reload --port 8002
-
-# (Optional) Start the background ML worker
-python -m backend.worker.inference_worker
 ```
 
-### 2. Frontend Setup
+### 2. Setup Frontend
 
 ```bash
 cd frontend
@@ -170,20 +190,98 @@ cd frontend
 # Install dependencies
 npm install
 
-# Configure environment variables
-# Create a .env file based on .env.example with your Firebase Web Config
+# Configure Firebase Web credentials
+# Copy .env.example to .env and fill in your Firebase config:
+cp ../.env.example .env
+# Edit .env with your VITE_FIREBASE_* values
 
-# Start the Vite dev server
+# Start Vite dev server
 npm run dev
 ```
 
-### 3. Docker Compose (Alternative)
+### 3. (Optional) Async Worker
 
-To run the entire backend stack (API, Redis, Worker) containerized:
+For background ML processing:
+```bash
+# Requires Redis running locally
+redis-server
+
+# In a separate terminal:
+rq worker inference
+```
+
+### 4. Docker Compose (Full Stack)
+
 ```bash
 docker-compose up --build
 ```
 
+This starts the FastAPI backend, Redis, and RQ worker together.
+
 ---
 
-*FieldMind - Cultivating the future of intelligent farming.*
+## Example Workflow
+
+1. **Open** `http://localhost:5174` (or whichever Vite port)
+2. **Sign in** with Google or Email/Password
+3. **Navigate** to Disease Detection in the sidebar
+4. **Upload** a clear photo of a plant leaf showing disease symptoms
+5. **Click** "Start Analysis" — watch the pipeline timeline progress
+6. **Review** the diagnosis card showing:
+   - Possible disease with confidence score
+   - Visual findings (detected symptom regions)
+   - Treatment recommendation
+   - AI disclaimer
+7. **Provide feedback** (Correct / Incorrect) to help improve the model
+8. **View history** in Diagnosis History
+
+For crop recommendations:
+1. Go to Crop Recommendation
+2. Click "Use My Location" to auto-fill environmental data, or enter manually
+3. Review ranked crop suggestions with seasonal suitability and reasons
+
+---
+
+## Known Limitations
+
+- **Crop identity is uncertain.** The disease classifier outputs labels like `tomato_septoria_leaf_spot` — the crop prefix is part of the training label and may not correctly identify the actual crop in the uploaded photo.
+- **Visual disease patterns, not agricultural ground truth.** The model detects visual symptoms that correlate with known diseases. Real-world confirmation by a qualified agronomist is always required.
+- **Domain shift.** Models trained primarily on controlled/lab-style PlantVillage images may have lower accuracy on real-world smartphone field photographs with complex backgrounds.
+- **20+ disease classes only.** The classifier cannot detect diseases outside its training classes. Unfamiliar inputs may return the nearest matching class with low confidence.
+- **YOLO bounding boxes are approximations.** Affected area percentage is computed from bounding box geometry, which overestimates true affected leaf tissue area.
+- **No real-time model updates.** The ML layer is frozen for this student project. Feedback data is collected but model retraining is not automated.
+
+---
+
+## Project Structure
+
+```
+fieldmind/
+├── frontend/                  # React + Vite SPA
+│   ├── src/
+│   │   ├── components/        # Navbar, Sidebar, UploadBox, Timeline, forms
+│   │   ├── hooks/             # useAuth, useLanguage
+│   │   ├── pages/             # DiseaseDetection, Dashboard, Marketplace, etc.
+│   │   └── services/          # Axios API clients + Firebase config
+│   └── package.json
+├── backend/                   # FastAPI application
+│   ├── core/                  # Config, logging, security, request ID
+│   ├── db/                    # Firebase Admin SDK init
+│   ├── models/                # Pydantic schemas
+│   │   ├── leaf_verifier.onnx
+│   │   ├── fieldmind_pest.onnx
+│   │   ├── fieldmind_yolo_best.onnx
+│   │   └── crop_model.pkl
+│   ├── routers/               # API endpoints
+│   ├── services/              # ML inference, leaf verifier, image validation
+│   ├── worker/                # Async inference worker (RQ)
+│   └── main.py                # ASGI entrypoint
+├── tests/                     # Integration tests
+├── docker-compose.yml
+├── requirements.txt
+└── start.sh                   # Convenience startup script
+```
+
+---
+
+*FieldMind — Demonstrating AI-powered precision agriculture through full-stack engineering.*

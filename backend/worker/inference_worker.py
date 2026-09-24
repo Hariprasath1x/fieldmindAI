@@ -335,7 +335,6 @@ def run_inference_job(
             },
             "severity": {
                 "detections": severity_detections,
-                "bounding_boxes": [d.get("box", []) for d in severity_detections],
                 "affected_area_pct": affected_area_pct,
                 "area_pct_note": (
                     "Bounding-box approximation; may overestimate true affected area."

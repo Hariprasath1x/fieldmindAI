@@ -203,38 +203,28 @@ class LeafVerifier:
         predicted_label = self.labels[top_index] if top_index < len(self.labels) else str(top_index)
         normalized_label = predicted_label.lower()
 
-        if confidence < self.confidence_threshold:
-            verification = {
-                "is_leaf": False,
-                "status": "uncertain",
-                "confidence": confidence,
-                "predicted_class": "unknown",
-                "threshold": self.confidence_threshold,
-                "error_code": "LOW_LEAF_CONFIDENCE",
-            }
-            pipeline = {"allow_processing": False, "next_step": "upload_again"}
-            message = "The model could not confidently identify a leaf."
-        elif normalized_label == self.leaf_label.lower():
-            verification = {
-                "is_leaf": True,
-                "status": "verified",
-                "confidence": confidence,
-                "predicted_class": self.leaf_label,
-                "threshold": self.confidence_threshold,
-            }
-            pipeline = {"allow_processing": True, "next_step": "disease_detection"}
-            message = None
-        else:
+        if normalized_label == self.non_leaf_label.lower() and confidence >= 0.90:
             verification = {
                 "is_leaf": False,
                 "status": "rejected",
                 "confidence": confidence,
                 "predicted_class": self.non_leaf_label,
-                "threshold": self.confidence_threshold,
+                "threshold": 0.90,
                 "error_code": "NOT_A_LEAF",
             }
             pipeline = {"allow_processing": False, "next_step": "upload_again"}
-            message = "The image could not be verified as a leaf."
+            message = "The image clearly does not contain a plant leaf."
+        else:
+            is_leaf = (normalized_label == self.leaf_label.lower())
+            verification = {
+                "is_leaf": is_leaf,
+                "status": "verified" if (is_leaf and confidence >= self.confidence_threshold) else "uncertain",
+                "confidence": confidence,
+                "predicted_class": predicted_label,
+                "threshold": self.confidence_threshold,
+            }
+            pipeline = {"allow_processing": True, "next_step": "disease_detection"}
+            message = None
 
         response: dict[str, Any] = {
             "success": True,

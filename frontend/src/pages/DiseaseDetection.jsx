@@ -4,7 +4,6 @@ import UploadBox from '../components/UploadBox';
 import Timeline from '../components/Timeline';
 import { useAuth } from '../hooks/useAuth';
 import {
-  ShieldCheck,
   AlertTriangle,
   Info,
   Play,
@@ -12,7 +11,11 @@ import {
   ThumbsUp,
   ThumbsDown,
   Loader2,
-  MapPin,
+  Microscope,
+  ShieldAlert,
+  BarChart2,
+  Stethoscope,
+  AlertCircle,
 } from 'lucide-react';
 import { submitInference, pollInferenceResult, submitFeedback } from '../services/diagnosisApi';
 
@@ -50,6 +53,23 @@ const CONFIDENCE_LABELS = {
   low: 'Low Confidence',
 };
 
+// ── Format disease label for display ───────────────────────────────────────────
+function formatDiseaseLabel(label) {
+  if (!label) return '';
+  // e.g. "tomato_septoria_leaf_spot" → parts: ["tomato", "septoria", "leaf", "spot"]
+  const parts = label.split('_');
+  // Skip the first part (crop name) for the disease name display
+  const diseaseParts = parts.length > 1 ? parts.slice(1) : parts;
+  return diseaseParts.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+}
+
+function formatCropLabel(label) {
+  if (!label) return null;
+  const parts = label.split('_');
+  if (parts.length < 2) return null;
+  return parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+}
+
 // ── Feedback widget ────────────────────────────────────────────────────────────
 function FeedbackWidget({ diagnosisId, predictedLabel, userId }) {
   const [submitted, setSubmitted] = useState(false);
@@ -72,7 +92,6 @@ function FeedbackWidget({ diagnosisId, predictedLabel, userId }) {
       });
       setSubmitted(true);
     } catch {
-      // Feedback failure is non-critical — don't block the user
       setSubmitted(true);
     } finally {
       setLoading(false);
@@ -161,19 +180,15 @@ export default function DiseaseDetection() {
     setCurrentStep(1);
 
     try {
-      // Submit job
       const job = await submitInference(file, {
         plantId: plantId || null,
         userId: user?.uid || null,
       });
 
       if (job.status === 'completed' || job.status === 'failed') {
-        // Synchronous fallback — already done
         if (job.status === 'failed') {
           setError('Disease analysis failed. Please try again.');
         } else {
-          // Fetch result via status endpoint
-          // The job is done; fetch the result
           const { getInferenceStatus } = await import('../services/diagnosisApi');
           const statusData = await getInferenceStatus(job.job_id, user?.uid || null);
           handleResult(statusData);
@@ -181,7 +196,6 @@ export default function DiseaseDetection() {
         return;
       }
 
-      // Polling mode
       const finalData = await pollInferenceResult(
         job.job_id,
         (statusData) => {
@@ -205,7 +219,6 @@ export default function DiseaseDetection() {
   const handleResult = (statusData) => {
     const result = statusData.result;
     if (!result || !result.success) {
-      // Validation / leaf rejection
       const userMsg =
         result?.user_message ||
         result?.message ||
@@ -221,7 +234,17 @@ export default function DiseaseDetection() {
   };
 
   const confidenceLevel = results?.confidence_level || 'low';
-  const confidencePct = (results && Number.isFinite(results.confidence)) ? Math.round(results.confidence * 100) : null;
+  const confidencePct = (results && Number.isFinite(results.confidence))
+    ? Math.round(results.confidence * 100)
+    : null;
+
+  // Derived display values
+  const diseaseName = formatDiseaseLabel(results?.disease);
+  const inferredCrop = formatCropLabel(results?.disease);
+  const isVerified = results?.verification?.status === 'verified';
+  const verificationConfPct = results?.verification?.confidence != null
+    ? Math.round(results.verification.confidence * 100)
+    : null;
 
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-8">
@@ -290,69 +313,85 @@ export default function DiseaseDetection() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-6"
           >
-            {/* Confidence banner */}
-            {confidenceLevel !== 'high' && (
-              <div className={`p-4 rounded-lg border flex items-start gap-3 ${CONFIDENCE_COLORS[confidenceLevel]}`}>
-                <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
-                <p className="text-sm">
-                  {results.user_message ||
-                    (confidenceLevel === 'medium'
-                      ? 'Moderate confidence result. Upload a clearer image for a definitive diagnosis.'
-                      : 'Low confidence — FieldMind could not reliably identify this disease. Please upload a clearer image.')}
-                </p>
-              </div>
-            )}
-
-            {/* Disease Result Card */}
+            {/* ── Main Diagnosis Card ── */}
             <div className="bg-card p-6 md:p-8 rounded-xl shadow-sm border border-border">
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-                <h2 className="text-2xl font-bold text-text-primary">
-                  {results.disease?.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                </h2>
-                <span
-                  className={`flex items-center gap-1 px-3 py-1 rounded-full border text-sm font-semibold ${CONFIDENCE_COLORS[confidenceLevel]}`}
-                >
-                  <ShieldCheck className="h-4 w-4" />
-                  {CONFIDENCE_LABELS[confidenceLevel]} {confidencePct !== null && `· ${confidencePct}%`}
-                </span>
+
+              {/* Header */}
+              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Stethoscope className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-text-primary">AI Diagnosis Result</h2>
+                  <p className="text-sm text-text-secondary">Review findings carefully before taking action</p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                {results.crop && (
-                  <div>
-                    <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-1">
-                      Crop
-                    </h3>
-                    <p className="text-text-primary font-medium">{results.crop}</p>
-                  </div>
+              {/* 1. Possible Disease */}
+              <div className="mb-6">
+                <p className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-1">
+                  Possible Disease
+                </p>
+                <div className="flex items-start justify-between flex-wrap gap-3">
+                  <h3 className="text-2xl font-bold text-text-primary">
+                    {diseaseName || results.disease?.replace(/_/g, ' ')}
+                  </h3>
+                  <span
+                    className={`flex items-center gap-1 px-3 py-1 rounded-full border text-sm font-semibold ${CONFIDENCE_COLORS[confidenceLevel]}`}
+                  >
+                    {CONFIDENCE_LABELS[confidenceLevel]}
+                    {confidencePct !== null && ` · ${confidencePct}%`}
+                  </span>
+                </div>
+
+                {/* Inferred crop note */}
+                {inferredCrop && (
+                  <p className="mt-2 text-sm text-text-secondary flex items-center gap-1.5">
+                    <AlertCircle className="h-4 w-4 shrink-0 text-yellow-500" />
+                    Model associated this with <strong className="text-text-primary">{inferredCrop}</strong>. Crop identity may be incorrect — verify before applying treatment.
+                  </p>
                 )}
+              </div>
+
+              {/* 2. Leaf Verification Status */}
+              <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="p-3 bg-background-app rounded-lg border border-border">
+                  <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-1">Leaf Verification</p>
+                  <p className="text-sm font-semibold text-text-primary capitalize">
+                    {results.verification?.status || 'N/A'}
+                    {verificationConfPct !== null && (
+                      <span className="text-text-secondary font-normal ml-1">({verificationConfPct}%)</span>
+                    )}
+                  </p>
+                </div>
+
                 {results.severity?.affected_area_pct != null && (
-                  <div>
-                    <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-1">
-                      Estimated Affected Area
-                    </h3>
-                    <p className="text-text-primary font-medium">
+                  <div className="p-3 bg-background-app rounded-lg border border-border">
+                    <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-1">Estimated Affected Area</p>
+                    <p className="text-sm font-semibold text-text-primary">
                       {results.severity.affected_area_pct}%
                       <span className="text-xs text-text-secondary ml-1">(bbox approx.)</span>
                     </p>
                   </div>
                 )}
+
                 {results.image_quality?.blur_score != null && (
-                  <div>
-                    <h3 className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-1">
-                      Image Sharpness
-                    </h3>
-                    <p className="text-text-primary font-medium">
+                  <div className="p-3 bg-background-app rounded-lg border border-border">
+                    <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-1">Image Sharpness</p>
+                    <p className="text-sm font-semibold text-text-primary">
                       {results.image_quality.blur_score.toFixed(1)}
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Top predictions */}
+              {/* 3. Top Predictions */}
               {results.top_predictions && results.top_predictions.length > 1 && (
                 <div className="mb-6">
-                  <h3 className="text-sm font-medium text-text-secondary mb-2">Top Predictions</h3>
+                  <div className="flex items-center gap-2 mb-3">
+                    <BarChart2 className="h-4 w-4 text-text-secondary" />
+                    <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">Top Predictions</h4>
+                  </div>
                   <div className="space-y-2">
                     {results.top_predictions.map((pred, idx) => (
                       <div key={idx} className="flex items-center gap-3">
@@ -374,12 +413,43 @@ export default function DiseaseDetection() {
                 </div>
               )}
 
-              {/* Recommendation */}
-              <div className="p-4 bg-background-app rounded-lg border border-border">
+              {/* 4. Visual Findings (Severity Detections) */}
+              {results.severity?.detections?.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Microscope className="h-4 w-4 text-text-secondary" />
+                    <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">Visual Findings</h4>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {[...new Set(results.severity.detections.map(d => d.label))].map((label, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 text-xs font-medium bg-orange-50 text-orange-800 border border-orange-200 rounded-full capitalize"
+                      >
+                        • {label} detected
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 5. Recommendation */}
+              <div className="mb-6 p-4 bg-background-app rounded-lg border border-border">
                 <div className="flex items-start gap-2">
                   <Info className="h-4 w-4 text-secondary shrink-0 mt-0.5" />
-                  <p className="text-sm text-text-primary leading-relaxed">{results.recommendation}</p>
+                  <div>
+                    <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-1">Recommendation</p>
+                    <p className="text-sm text-text-primary leading-relaxed">{results.recommendation}</p>
+                  </div>
                 </div>
+              </div>
+
+              {/* 6. AI Disclaimer */}
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
+                <ShieldAlert className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-yellow-800">
+                  <strong>AI-generated result.</strong> This tool identifies visual disease patterns but does not guarantee crop identification. Always verify the crop type and consult a local agronomist before applying any treatment.
+                </p>
               </div>
 
               {/* Feedback */}
@@ -390,23 +460,16 @@ export default function DiseaseDetection() {
               />
             </div>
 
-            {/* Severity Card */}
-            {results.severity?.detections?.length > 0 && (
-              <div className="bg-card p-6 rounded-xl shadow-sm border border-border">
-                <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
-                  <MapPin className="h-5 w-5 text-secondary" />
-                  Severity Detections
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {results.severity.detections.map((det, idx) => (
-                    <div key={idx} className="p-3 border border-border rounded-lg bg-background-app">
-                      <p className="font-medium text-text-primary capitalize">{det.label}</p>
-                      <p className="text-sm text-text-secondary">
-                        Confidence: {Math.round(det.confidence * 100)}%
-                      </p>
-                    </div>
-                  ))}
-                </div>
+            {/* ── Confidence / Low-confidence warning banner (separate) ── */}
+            {confidenceLevel !== 'high' && (
+              <div className={`p-4 rounded-lg border flex items-start gap-3 ${CONFIDENCE_COLORS[confidenceLevel]}`}>
+                <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
+                <p className="text-sm">
+                  {results.user_message ||
+                    (confidenceLevel === 'medium'
+                      ? 'Moderate confidence — the model detected likely symptoms but is not fully certain. Upload a clearer, closer image for a more definitive result.'
+                      : 'Low confidence — FieldMind could not reliably identify the disease. Please upload a clearer, better-lit image of the affected leaf.')}
+                </p>
               </div>
             )}
           </motion.div>

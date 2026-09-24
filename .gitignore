@@ -79,3 +79,16 @@ leaf_verifier_v2.onnx.data
 
 # Local scratch notes
 push.txt
+
+# ML experiment workspace (V3-V9 experiments)
+scratch/
+evaluation/
+
+# Root-level orphaned test/debug images
+blurry_leaf.jpg
+debug_leaf.py
+debug_leaf_verifier*.py
+fieldmind_project_report.md
+backend_test.log
+e2e_tests.py
+test_e2e.py
