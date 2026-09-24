@@ -222,14 +222,15 @@ def run_inference_job(
 
         if not pipeline_ctrl["allow_processing"]:
             result = {
-                "success": True,
-                "stage_failed": None,
+                "success": False,
+                "stage_failed": "leaf_verification",
+                "error_code": verification.get("error_code", "LEAF_VERIFICATION_FAILED"),
                 "verification": verification,
                 "pipeline": pipeline_ctrl,
                 "status": "rejected",
                 "user_message": verification_result.get(
                     "message",
-                    "Please upload a clear image of a single plant leaf.",
+                    "The model could not confidently identify a leaf.",
                 ),
             }
             _update_job(job_id, {"status": "completed", "result": result})

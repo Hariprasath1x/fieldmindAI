@@ -7,6 +7,7 @@ from typing import Any
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
+import cv2
 
 
 class LeafVerifierInitializationError(RuntimeError):
@@ -45,6 +46,8 @@ class LeafVerifier:
 
         self.non_leaf_label = self._select_label("non_leaf")
         self.leaf_label = self._select_label("leaf")
+        
+        self.blur_threshold = float(self.config.get("blur_threshold", 50.0))
 
     @staticmethod
     def _load_json(path: Path) -> dict[str, Any]:
@@ -164,6 +167,27 @@ class LeafVerifier:
     def predict(self, image: Image.Image) -> dict[str, Any]:
         """Run leaf verification and return the standardized response payload."""
 
+        # 1. Blur Detection via Laplacian Variance
+        # Convert image to grayscale for Laplacian
+        gray = np.array(image.convert("L"))
+        variance = cv2.Laplacian(gray, cv2.CV_64F).var()
+        
+        if variance < self.blur_threshold:
+            return {
+                "success": True,
+                "verification": {
+                    "is_leaf": False,
+                    "status": "rejected",
+                    "confidence": 0.0,
+                    "predicted_class": "unknown",
+                    "threshold": self.confidence_threshold,
+                    "error_code": "BLURRY_IMAGE",
+                },
+                "pipeline": {"allow_processing": False, "next_step": "upload_again"},
+                "message": "The uploaded image is too blurry. Please capture a clear, focused photo.",
+            }
+
+        # 2. Neural Network Inference
         try:
             input_tensor = self.preprocess(image)
             raw_output = self.session.run(None, {self.input_name: input_tensor})[0]
@@ -185,15 +209,18 @@ class LeafVerifier:
                 "status": "uncertain",
                 "confidence": confidence,
                 "predicted_class": "unknown",
+                "threshold": self.confidence_threshold,
+                "error_code": "LOW_LEAF_CONFIDENCE",
             }
             pipeline = {"allow_processing": False, "next_step": "upload_again"}
-            message = "Unable to verify the uploaded image. Please upload a clearer image."
+            message = "The model could not confidently identify a leaf."
         elif normalized_label == self.leaf_label.lower():
             verification = {
                 "is_leaf": True,
                 "status": "verified",
                 "confidence": confidence,
                 "predicted_class": self.leaf_label,
+                "threshold": self.confidence_threshold,
             }
             pipeline = {"allow_processing": True, "next_step": "disease_detection"}
             message = None
@@ -203,9 +230,11 @@ class LeafVerifier:
                 "status": "rejected",
                 "confidence": confidence,
                 "predicted_class": self.non_leaf_label,
+                "threshold": self.confidence_threshold,
+                "error_code": "NOT_A_LEAF",
             }
             pipeline = {"allow_processing": False, "next_step": "upload_again"}
-            message = "Please upload a clear image of a single plant leaf."
+            message = "The image could not be verified as a leaf."
 
         response: dict[str, Any] = {
             "success": True,

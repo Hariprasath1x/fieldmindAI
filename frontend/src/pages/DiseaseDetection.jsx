@@ -221,7 +221,7 @@ export default function DiseaseDetection() {
   };
 
   const confidenceLevel = results?.confidence_level || 'low';
-  const confidencePct = results ? Math.round(results.confidence * 100) : 0;
+  const confidencePct = (results && Number.isFinite(results.confidence)) ? Math.round(results.confidence * 100) : null;
 
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-8">
@@ -313,7 +313,7 @@ export default function DiseaseDetection() {
                   className={`flex items-center gap-1 px-3 py-1 rounded-full border text-sm font-semibold ${CONFIDENCE_COLORS[confidenceLevel]}`}
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  {CONFIDENCE_LABELS[confidenceLevel]} · {confidencePct}%
+                  {CONFIDENCE_LABELS[confidenceLevel]} {confidencePct !== null && `· ${confidencePct}%`}
                 </span>
               </div>
 

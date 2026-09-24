@@ -34,3 +34,48 @@ build/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# ==========================================
+# FieldMind ML Local Experiments / Scratch
+# ==========================================
+
+# Local model experiments and backups
+backend/models/backups/
+backend/models/candidates/
+
+# Root-level diagnostic / experiment scripts
+debug_*.py
+test_*.py
+inspect_*.py
+sweep_*.py
+download_*.py
+fix_*.py
+*_diagnostic.py
+*_eval*.py
+train_leaf_verifier.py
+
+# Keep formal ML regression tests tracked
+!tests/ml/
+!tests/ml/test_leaf_verifier.py
+!tests/ml/test_images/
+
+# Root-level temporary test images
+test_*.jpg
+test_*.jpeg
+test_*.png
+test_*.webp
+leaf_test.jpg
+blurry_leaf.jpg
+
+# Generated ML experiment artifacts
+leaf_eval_metrics.json
+training_config.json
+leaf_verifier_v2.onnx.data
+
+# Local ONNX external-data experiment files
+*.onnx.data
+# Do NOT ignore the production ONNX external data.
+!backend/models/leaf_verifier.onnx.data
+
+# Local scratch notes
+push.txt

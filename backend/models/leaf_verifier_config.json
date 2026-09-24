@@ -27,6 +27,7 @@
         "0": "non_leaf",
         "1": "leaf"
     },
-    "confidence_threshold": 0.85,
+    "confidence_threshold": 0.50,
+    "blur_threshold": 100.0,
     "output": "softmax"
 }
