@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends
-from datetime import datetime
+from datetime import datetime, timezone
 from google.cloud import firestore
 from backend.db.firebase import get_db
 from backend.models.marketplace_models import (
     UserSyncRequest, 
-    EquipmentCreate, EquipmentResponse,
-    WorkerCreate, WorkerResponse,
+    EquipmentBase, EquipmentCreate, EquipmentResponse,
+    WorkerBase, WorkerCreate, WorkerResponse,
     BookingCreate, BookingResponse
 )
 from backend.core.security import get_current_user_token
@@ -32,7 +32,7 @@ def sync_user(user: UserSyncRequest, token: dict = Depends(get_current_user_toke
         if not doc.exists:
             # Create new
             data = user.model_dump()
-            data["createdAt"] = datetime.utcnow().isoformat()
+            data["createdAt"] = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
             doc_ref.set(data)
             return {"status": "created", "data": data}
         else:
@@ -58,7 +58,7 @@ def get_user(uid: str, token: dict = Depends(get_current_user_token), db = Depen
 @router.post("/equipment", response_model=EquipmentResponse)
 def create_equipment(item: EquipmentCreate, token: dict = Depends(get_current_user_token), db = Depends(get_firestore)):
     data = item.model_dump()
-    data["createdAt"] = datetime.utcnow().isoformat()
+    data["createdAt"] = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     _, doc_ref = db.collection("equipment").add(data)
     return {**data, "id": doc_ref.id}
 
@@ -128,7 +128,7 @@ def get_owner_equipment(uid: str, token: dict = Depends(get_current_user_token),
 @router.post("/workers", response_model=WorkerResponse)
 def create_worker(worker: WorkerCreate, token: dict = Depends(get_current_user_token), db = Depends(get_firestore)):
     data = worker.model_dump()
-    data["createdAt"] = datetime.utcnow().isoformat()
+    data["createdAt"] = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     _, doc_ref = db.collection("workers").add(data)
     return {**data, "id": doc_ref.id}
 
@@ -236,7 +236,7 @@ def execute_booking_transaction(transaction, db, booking_data: dict, uid: str):
     # 4. Write
     booking_data["status"] = "Pending"
     booking_data["totalPrice"] = total_price
-    booking_data["createdAt"] = datetime.utcnow().isoformat()
+    booking_data["createdAt"] = datetime.now(timezone.utc).replace(tzinfo=None).isoformat()
     
     doc_ref = db.collection("bookings").document()
     transaction.set(doc_ref, booking_data)
@@ -259,7 +259,7 @@ def create_booking(booking: BookingCreate, token: dict = Depends(get_current_use
         
     try:
         booking_date = datetime.strptime(booking.date, "%Y-%m-%d").date()
-        today = datetime.utcnow().date()
+        today = datetime.now(timezone.utc).date()
         if booking_date < today:
             raise HTTPException(status_code=400, detail="Cannot book in the past")
     except ValueError:

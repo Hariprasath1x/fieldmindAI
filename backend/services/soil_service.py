@@ -8,7 +8,7 @@ def get_soil_info(lat: float, lon: float) -> dict:
     Fetches soil information from ISRIC SoilGrids REST API.
     Note: The SoilGrids REST API expects lon, lat format for properties.
     """
-    url = f"https://rest.isric.org/soilgrids/v2.0/properties/query"
+    url = "https://rest.isric.org/soilgrids/v2.0/properties/query"
     params = {
         "lon": lon,
         "lat": lat,

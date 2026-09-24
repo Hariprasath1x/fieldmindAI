@@ -8,7 +8,7 @@ METADATA_PATH = Path(__file__).parent.parent / "data" / "crop_metadata.json"
 try:
     with open(METADATA_PATH, "r") as f:
         CROP_METADATA = json.load(f)
-except Exception as e:
+except Exception:
     CROP_METADATA = {}
 
 def get_crop_metadata(crop_name: str) -> Dict[str, Any]:

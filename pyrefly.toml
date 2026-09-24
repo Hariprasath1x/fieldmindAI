@@ -1,0 +1,10 @@
+project-includes = ["backend", "tests"]
+project-excludes = [
+    "**/.venv/**",
+    "**/node_modules/**",
+    "**/__pycache__/**",
+    "**/.pytest_cache/**",
+    "**/.git/**"
+]
+search-path = ["."]
+python-interpreter-path = ".venv/bin/python"

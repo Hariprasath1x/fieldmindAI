@@ -143,9 +143,11 @@ def fastapi_client(mock_inference_service, mock_leaf_verifier):
     """Test client with mocked ML services."""
     from fastapi.testclient import TestClient
     from backend.main import app
+    from backend.core.security import get_current_user_token
 
     app.state.ml_service = mock_inference_service
     app.state.leaf_verifier = mock_leaf_verifier
+    app.dependency_overrides[get_current_user_token] = lambda: {"uid": "mock-uid", "phone_number": ""}
 
     # Patch both the module singleton AND the worker's already-imported reference.
     # The worker does `from backend.services.ml_inference import inference_service`

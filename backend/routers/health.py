@@ -11,6 +11,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
 
 from backend.core.config import settings
 from backend.db.firebase import get_db
@@ -95,7 +96,7 @@ def ready(request: Request) -> dict[str, Any]:
         "checks": checks,
     }
 
-    return response
+    return JSONResponse(status_code=status_code, content=response)
 
 
 @router.get("/metrics", tags=["Health"])

@@ -108,9 +108,9 @@ class TestBookingLifecycle:
             "targetName": "Harvester",
             "requesterId": "farmer-001",
             "ownerId": "owner-101",
-            "date": "2026-09-01",
-            "timeSlot": "08:00",
-            "duration": "4 hours",
+            "date": "2026-10-01",
+            "timeSlot": "Morning",
+            "duration": 4,
         }
         create_resp = client.post("/api/marketplace/bookings", json=booking_payload)
         assert create_resp.status_code in (200, 201)
@@ -138,9 +138,9 @@ class TestBookingLifecycle:
             "targetName": "Harvester",
             "requesterId": "farmer-002",
             "ownerId": "owner-101",
-            "date": "2026-09-02",
-            "timeSlot": "10:00",
-            "duration": "2 hours",
+            "date": "2026-10-02",
+            "timeSlot": "Morning",
+            "duration": 2,
         }
         create_resp = client.post("/api/marketplace/bookings", json=booking_payload)
         booking_id = create_resp.json()["id"]
@@ -158,9 +158,9 @@ class TestBookingLifecycle:
             "targetName": "Harvester",
             "requesterId": "farmer-003",
             "ownerId": "owner-101",
-            "date": "2026-09-03",
-            "timeSlot": "14:00",
-            "duration": "1 hour",
+            "date": "2026-10-03",
+            "timeSlot": "Afternoon",
+            "duration": 1,
         }
         create_resp = client.post("/api/marketplace/bookings", json=booking_payload)
         booking_id = create_resp.json()["id"]
