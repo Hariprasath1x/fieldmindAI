@@ -46,12 +46,7 @@
 26. [Known Limitations](#26-known-limitations)
 27. [Security Considerations](#27-security-considerations)
 28. [Future Improvements](#28-future-improvements)
-29. [Screenshots / Visuals](#29-screenshots--visuals)
-30. [Project Learning Outcomes](#30-project-learning-outcomes)
-31. [Resume Description](#31-resume-description)
-32. [How I Would Explain FieldMind in an Interview](#32-how-i-would-explain-fieldmind-in-an-interview)
-33. [Disclaimer](#33-disclaimer)
-34. [License](#34-license)
+29. [License](#29-license)
 
 ---
 
@@ -540,67 +535,6 @@ While not enterprise-grade, FieldMind implements several practical security laye
 
 ---
 
-## 29. Screenshots / Visuals
-
-<!-- Add screenshot: Landing/Dashboard -->
-*Placeholder: Landing / Dashboard View*
-
-<!-- Add screenshot: Disease Detection upload -->
-*Placeholder: Uploading an image to the Disease Detection pipeline*
-
-<!-- Add screenshot: Disease result -->
-*Placeholder: Diagnosis Card with YOLO bounding boxes and AI recommendations*
-
-<!-- Add screenshot: Marketplace -->
-*Placeholder: Agricultural Marketplace equipment listings*
-
-<!-- Add screenshot: ML Dashboard -->
-*Placeholder: Offline ML Evaluation Dashboard showing Verifier metrics*
-
-*(Tip for the author: Take screenshots of your running localhost application and replace these placeholders!)*
-
----
-
-## 30. Project Learning Outcomes
-
-Building FieldMind demonstrated applied knowledge in:
-- **Deep Learning / MLOps:** Training PyTorch models, exporting them to ONNX, and wrapping them in a performant Python inference service.
-- **Full-Stack Engineering:** Orchestrating a React single-page application with a FastAPI backend.
-- **Cloud Databases:** Designing NoSQL data structures and managing real-time state with Google Firestore.
-- **Authentication:** Implementing secure JWT-based identity verification.
-- **Software Testing:** Writing comprehensive automated API and ML-mock tests using Pytest.
-
----
-
-## 31. Resume Description
-
-If you are reading this on my resume, here is the quick summary:
-
-**FieldMind — AI-Powered Agricultural Assistance Platform**
-*Tech: Python, FastAPI, React, PyTorch, ONNX, YOLOv8, Firebase, Firestore*
-- Engineered a full-stack agricultural platform integrating a multi-stage ML pipeline (Leaf Verification, Disease Classification, YOLO Severity Detection) using ONNX Runtime and FastAPI.
-- Built a responsive React front-end featuring image uploads, real-time AI diagnosis cards, and an agricultural equipment rental marketplace.
-- Architected secure backend REST routes with Firebase Authentication and persisted user histories/marketplace transactions in Google Firestore NoSQL.
-- Authored a comprehensive suite of 97 automated tests ensuring API and ML pipeline reliability.
-
----
-
-## 32. 🎤 How I Would Explain FieldMind in an Interview
-
-**The 30-Second Elevator Pitch:**
-> *"FieldMind is a full-stack web application I built for my B.Tech final project. It helps farmers upload photos of diseased crops, runs those photos through a sequenced AI pipeline to detect the disease and its severity, and provides treatment recommendations. It also includes an agricultural marketplace for renting equipment."*
-
-**The 2-Minute Technical Deep Dive:**
-> *"Technically, the project is split into a React frontend and a FastAPI backend. When a user uploads an image, the backend doesn't just run one massive model. It runs a sequenced pipeline: first, a lightweight MobileNet ONNX model verifies if the image is actually a leaf. If it passes, an EfficientNet model classifies the specific disease. Finally, a YOLOv8 object detection model draws bounding boxes around the symptoms to estimate severity. I used ONNX Runtime because it's significantly faster and lighter for CPU inference than loading full PyTorch. All the user data, diagnosis history, and marketplace bookings are stored in Google Firestore, secured behind Firebase JWT authentication. It taught me a lot about how to deploy ML models into a real-world web architecture rather than just running them in a Jupyter Notebook."*
-
----
-
-## 33. Disclaimer
-
-*FieldMind is a student/resume project created for educational and demonstration purposes. AI predictions and recommendations are not professional agricultural advice. Model performance may vary significantly on real-world images and diverse environmental conditions.*
-
----
-
-## 34. License
+## 29. License
 
 This project is licensed under the MIT License.
