@@ -35,10 +35,13 @@ function ModelEvaluationCard({ modelData }) {
   if (!dataset_available) {
     return (
       <div className="p-4 border border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-start gap-3">
-        <Database className="h-5 w-5 text-gray-400 shrink-0" />
+        <Database className="h-5 w-5 text-gray-400 shrink-0 mt-1" />
         <div>
           <h5 className="font-semibold text-text-primary mb-1">{name}</h5>
-          <p className="text-sm text-text-secondary">{dataset_message || 'No dataset available.'}</p>
+          <div className="text-xs font-semibold text-red-600 mb-2">Status: Evaluation Dataset Unavailable</div>
+          <p className="text-sm text-text-secondary">
+            Evaluation dataset is not currently available. No metric is displayed to avoid presenting unverified results.
+          </p>
         </div>
       </div>
     );
@@ -55,7 +58,8 @@ function ModelEvaluationCard({ modelData }) {
     <div className="p-5 border border-border rounded-lg bg-background-app">
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h5 className="font-bold text-text-primary">{name}</h5>
+          <h5 className="font-bold text-text-primary mb-1">{name}</h5>
+          <div className="text-xs font-semibold text-green-600 mb-1">Status: Evaluated</div>
           <p className="text-xs text-text-secondary">
             Last evaluated: {new Date(evaluation_timestamp).toLocaleDateString()}
           </p>

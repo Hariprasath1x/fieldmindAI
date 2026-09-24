@@ -1,0 +1,30 @@
+{
+  "model": "leaf_verifier",
+  "model_name": "FieldMind Leaf Verification",
+  "version": "1.0.0",
+  "framework": "ONNX",
+  "dataset_available": true,
+  "dataset_path": "/Users/hariprasathc/Projects/fieldmind/evaluation/data/leaf_verifier",
+  "accuracy": 0.7,
+  "precision": 1.0,
+  "recall": 0.5,
+  "f1": 0.6667,
+  "confusion_matrix": [
+    [
+      4,
+      0
+    ],
+    [
+      3,
+      3
+    ]
+  ],
+  "confusion_matrix_labels": [
+    "non_leaf",
+    "leaf"
+  ],
+  "sample_count": 10,
+  "errors": 0,
+  "eval_time_ms": 69.0,
+  "evaluation_timestamp": "2026-09-24T19:21:37.257963+00:00"
+}

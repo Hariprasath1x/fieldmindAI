@@ -1,0 +1,14 @@
+{
+  "model": "yolo_detector",
+  "model_name": "fieldmind_yolo_best.onnx",
+  "version": "1.0.0",
+  "framework": "ONNX / YOLOv8",
+  "iou_threshold": 0.5,
+  "dataset_available": false,
+  "dataset_message": "Evaluation dataset not found at '/Users/hariprasathc/Projects/fieldmind/evaluation/data/yolo_detector'. Provide YOLO-format annotations \u2014 see evaluation/data/README.md.",
+  "precision": null,
+  "recall": null,
+  "map_50": null,
+  "map_50_95": null,
+  "evaluation_timestamp": "2026-09-24T19:21:37.257963+00:00"
+}

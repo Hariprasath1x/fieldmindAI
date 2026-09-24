@@ -1,0 +1,16 @@
+{
+  "model": "disease_classifier",
+  "model_name": "fieldmind_pest.onnx",
+  "version": "1.0.0",
+  "framework": "ONNX",
+  "class_count": 22,
+  "dataset_available": false,
+  "dataset_message": "Evaluation dataset not found at '/Users/hariprasathc/Projects/fieldmind/evaluation/data/disease_classifier'. Provide a labelled dataset \u2014 see evaluation/data/README.md. No metrics are fabricated.",
+  "accuracy": null,
+  "macro_f1": null,
+  "top_1_accuracy": null,
+  "top_3_accuracy": null,
+  "per_class": null,
+  "confusion_matrix": null,
+  "evaluation_timestamp": "2026-09-24T19:21:37.257963+00:00"
+}

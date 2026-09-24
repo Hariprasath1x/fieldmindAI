@@ -1,0 +1,12 @@
+{
+  "model": "crop_recommender",
+  "model_name": "crop_model.pkl",
+  "version": "1.0.0",
+  "framework": "scikit-learn",
+  "dataset_available": false,
+  "dataset_message": "Evaluation CSV not found at '/Users/hariprasathc/Projects/fieldmind/evaluation/data/crop_recommender/test.csv'. Provide a CSV with columns: N,P,K,temperature,humidity,pH,rainfall,label. See evaluation/data/README.md.",
+  "accuracy": null,
+  "macro_f1": null,
+  "top_3_accuracy": null,
+  "evaluation_timestamp": "2026-09-24T19:21:37.257963+00:00"
+}

@@ -1,11 +1,11 @@
 # FieldMind 🌾
 
-**AI-Powered Agricultural Assistance Platform**
+**AI-powered agricultural assistance platform demonstrating computer vision, deep learning inference, severity detection, recommendations, and a full-stack web application.**
 
-FieldMind is a full-stack web application that integrates Deep Learning, Computer Vision, and modern web technologies to provide crop disease detection, intelligent crop recommendations, and a peer-to-peer agricultural marketplace.
+FieldMind is a B.Tech Computer Science final-year/resume project that integrates ML models into a web application to provide crop disease detection, intelligent crop recommendations, and a peer-to-peer agricultural marketplace.
 
 Built as a B.Tech Computer Science final-year project demonstrating:
-- End-to-end AI/ML integration in a production-style web application
+- End-to-end AI/ML integration in a full-stack web application
 - PyTorch model training → ONNX export → FastAPI inference deployment
 - React + FastAPI full-stack development
 - Firebase authentication and Firestore database
@@ -244,11 +244,12 @@ For crop recommendations:
 
 ## Known Limitations
 
-- **Crop identity is uncertain.** The disease classifier outputs labels like `tomato_septoria_leaf_spot` — the crop prefix is part of the training label and may not correctly identify the actual crop in the uploaded photo.
+- **Educational/Demonstration Purpose Only.** This is NOT a production-ready AI, research-grade model, highly accurate, or clinically/agronomically validated system. ML predictions are strictly for demonstration and educational purposes.
+- **Crop identity is uncertain.** The disease classifier outputs labels like `tomato_septoria_leaf_spot` — the crop prefix is part of the training label and may not correctly identify the actual crop in the uploaded photo, and can confuse visually similar disease classes/crops.
 - **Visual disease patterns, not agricultural ground truth.** The model detects visual symptoms that correlate with known diseases. Real-world confirmation by a qualified agronomist is always required.
-- **Domain shift.** Models trained primarily on controlled/lab-style PlantVillage images may have lower accuracy on real-world smartphone field photographs with complex backgrounds.
+- **Domain shift.** Models trained primarily on controlled/lab-style PlantVillage images may have lower accuracy on real-world smartphone field photographs with complex backgrounds. Field images may exhibit domain shift.
 - **20+ disease classes only.** The classifier cannot detect diseases outside its training classes. Unfamiliar inputs may return the nearest matching class with low confidence.
-- **YOLO bounding boxes are approximations.** Affected area percentage is computed from bounding box geometry, which overestimates true affected leaf tissue area.
+- **Severity percentage is an approximation.** Affected area percentage is computed from bounding box geometry, which overestimates true affected leaf tissue area.
 - **No real-time model updates.** The ML layer is frozen for this student project. Feedback data is collected but model retraining is not automated.
 
 ---
