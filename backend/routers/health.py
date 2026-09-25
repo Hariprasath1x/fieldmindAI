@@ -44,7 +44,7 @@ def health() -> dict[str, str]:
 
 
 @router.get("/ready", tags=["Health"])
-def ready(request: Request) -> dict[str, Any]:
+def ready(request: Request) -> JSONResponse:
     """Readiness probe — checks all dependencies are available."""
     checks: dict[str, str] = {}
     overall_ready = True

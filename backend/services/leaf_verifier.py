@@ -122,7 +122,7 @@ class LeafVerifier:
 
         try:
             return ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
-        except ort.OrtError as exc:
+        except Exception as exc:
             raise LeafVerifierInitializationError("Failed to initialize the leaf verifier model.") from exc
 
     def _select_label(self, expected_name: str) -> str:
