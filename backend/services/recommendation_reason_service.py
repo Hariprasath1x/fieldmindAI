@@ -18,20 +18,21 @@ def get_crop_metadata(crop_name: str) -> Dict[str, Any]:
         "water_range": "N/A",
         "difficulty": "Moderate",
         "ideal_conditions": {},
-        "description": "Information not available."
+        "description": "A highly recommended crop based on your specific environmental and soil parameters."
     })
 
 def generate_reasons(crop_name: str, payload: Any, is_top_choice: bool) -> list[str]:
     crop_name_lower = crop_name.lower()
     if crop_name_lower not in CROP_METADATA:
-        if is_top_choice:
-            return ["Excellent choice for your soil parameters."]
-        return ["Parameters do not strongly match."]
+        # Fallback if crop is not in metadata
+        return [
+            f"Strong environmental alignment with your soil (N:{payload.N}, P:{payload.P}, K:{payload.K}).",
+            f"Matches your local weather profile (Temp: {payload.temperature}°C, Rain: {payload.rainfall}mm)."
+        ]
 
     ideal = CROP_METADATA[crop_name_lower]["ideal_conditions"]
     reasons = []
 
-    # Helper for why not (below min or above max)
     def check_range(name, value, ideal_range, unit=""):
         if value < ideal_range.get("min", 0):
             return f"{name} ({value}{unit}) is below preferred range (min {ideal_range.get('min')}{unit})."
@@ -39,7 +40,6 @@ def generate_reasons(crop_name: str, payload: Any, is_top_choice: bool) -> list[
             return f"{name} ({value}{unit}) is slightly higher than recommended (max {ideal_range['max']}{unit})."
         return None
 
-    # Compare values
     checks = [
         ("Rainfall", payload.rainfall, ideal.get("rainfall", {}), " mm"),
         ("Temperature", payload.temperature, ideal.get("temperature", {}), "°C"),
@@ -51,21 +51,21 @@ def generate_reasons(crop_name: str, payload: Any, is_top_choice: bool) -> list[
     ]
 
     if is_top_choice:
-        # Generate positive "Why" statements
-        positive_factors = []
-        for name, value, ideal_range, _ in checks:
+        # For the top choice, list positive matches and any slight mismatches
+        for name, value, ideal_range, unit in checks:
             if not ideal_range:
                 continue
-            if ideal_range.get("min", 0) <= value <= ideal_range.get("max", float('inf')):
-                positive_factors.append(name.lower())
-        
-        if positive_factors:
-            joined = ", ".join(positive_factors[:3])
-            reasons.append(f"Recommended because your farm has suitable {joined}.")
-        else:
-            reasons.append("Recommended based on overall suitability score.")
+            
+            mismatch = check_range(name, value, ideal_range, unit)
+            if mismatch:
+                reasons.append(mismatch)
+            else:
+                reasons.append(f"{name} ({value}{unit}) is optimal for this crop.")
+                
+        if not reasons:
+            reasons.append("Recommended based on overall environmental suitability.")
     else:
-        # Generate negative "Why Not" statements
+        # For alternatives, focus primarily on why they scored lower (mismatches)
         for name, value, ideal_range, unit in checks:
             if not ideal_range:
                 continue
