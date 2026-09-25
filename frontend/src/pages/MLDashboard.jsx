@@ -99,20 +99,27 @@ export default function MLDashboard() {
         const mlRes = await getMLDashboard();
         setMlData(mlRes);
 
-        // Feedback dashboard is admin-only
-        if (profile?.role === 'admin' || profile?.role === 'developer') {
-          try {
-            const fbRes = await getFeedbackDashboard(user.uid);
-            setFeedbackData(fbRes);
-          } catch (err) {
-            if (err.response?.status === 403) {
-              setAccessDenied(true);
+        // Try to fetch feedback dashboard.
+        // The backend determines if this user is an admin.
+        try {
+          const fbRes = await getFeedbackDashboard(user.uid);
+          setFeedbackData(fbRes);
+        } catch (err) {
+          if (err.response?.status === 403) {
+            setAccessDenied(true);
+          } else if (err.response?.status === 501 || err.response?.data?.detail === 'Admin access has not been configured for this deployment.') {
+            // New state or just display error? We can handle this with a new state.
+            // But wait, what does the backend return if no admin configured?
+            // Actually, we can just return a specific error from the backend.
+            if (err.response?.data?.detail?.includes("configured")) {
+              setFeedbackData({ _notConfigured: true });
             } else {
-              console.error('Feedback dashboard error:', err);
+              setAccessDenied(true);
             }
+          } else {
+            console.error('Feedback dashboard error:', err);
+            setAccessDenied(true); // default to access denied to fail safely
           }
-        } else {
-          setAccessDenied(true);
         }
       } catch (err) {
         console.error(err);
@@ -194,6 +201,14 @@ export default function MLDashboard() {
             <h3 className="font-semibold text-gray-700">Admin Access Required</h3>
             <p className="text-sm text-gray-500 mt-1">
               You do not have permission to view aggregated user feedback metrics.
+            </p>
+          </div>
+        ) : feedbackData?._notConfigured ? (
+          <div className="p-6 text-center border border-dashed border-gray-300 rounded-xl bg-gray-50">
+            <Lock className="h-8 w-8 text-gray-400 mx-auto mb-3" />
+            <h3 className="font-semibold text-gray-700">Not Configured</h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Admin access has not been configured for this deployment.
             </p>
           </div>
         ) : feedbackData ? (

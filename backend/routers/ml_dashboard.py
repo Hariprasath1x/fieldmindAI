@@ -11,11 +11,12 @@ import logging
 from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import APIRouter, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from backend.core.config import settings
 from backend.core.request_id import get_request_id
 from backend.db.firebase import get_db
+from backend.core.security import get_current_user_token
 
 router = APIRouter(prefix="/api/ml", tags=["ML Dashboard"])
 logger = logging.getLogger("fieldmind.ml_dashboard")
@@ -23,7 +24,8 @@ logger = logging.getLogger("fieldmind.ml_dashboard")
 MODEL_NAMES = ["disease_classifier", "leaf_verifier", "yolo_detector", "crop_recommender"]
 
 
-def _require_admin(x_user_id: Optional[str] = Header(None)) -> str:
+def _require_admin(token: dict = Depends(get_current_user_token)) -> str:
+    x_user_id = token.get("uid")
     if not x_user_id:
         raise HTTPException(
             status_code=401,
@@ -32,6 +34,17 @@ def _require_admin(x_user_id: Optional[str] = Header(None)) -> str:
                 "request_id": get_request_id(),
             },
         )
+        
+    admin_uids = [uid.strip() for uid in settings.ADMIN_UIDS.split(",") if uid.strip()]
+    if not admin_uids:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access has not been configured for this deployment."
+        )
+
+    if x_user_id in admin_uids:
+        return x_user_id
+
     try:
         db = get_db()
         doc = db.collection("users").document(x_user_id).get()
@@ -46,7 +59,7 @@ def _require_admin(x_user_id: Optional[str] = Header(None)) -> str:
                     "request_id": get_request_id(),
                 },
             )
-        role = doc.to_dict().get("role", "Farmer").lower()
+        role = (doc.to_dict() or {}).get("role", "Farmer").lower()
         if role not in ("admin", "developer"):
             raise HTTPException(
                 status_code=403,
@@ -119,7 +132,7 @@ def _load_all_results(model_name: str) -> list[dict[str, Any]]:
 
 
 @router.get("/dashboard")
-def ml_dashboard(admin: str = None) -> dict[str, Any]:
+def ml_dashboard(admin: Optional[str] = None) -> dict[str, Any]:
     """Return the latest evaluation snapshot for all models.
 
     This endpoint is publicly accessible (read-only) since it exposes

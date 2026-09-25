@@ -13,6 +13,13 @@ def client(fastapi_client):
 
 
 class TestAuthenticationRequired:
+    @pytest.fixture(autouse=True)
+    def clear_auth_override(self, client):
+        # Clear the global mock so we can actually test the real authentication logic
+        from backend.core.security import get_current_user_token
+        client.app.dependency_overrides.pop(get_current_user_token, None)
+        yield
+        
     def test_diagnosis_history_requires_auth(self, client):
         response = client.get("/api/diagnosis/history")
         assert response.status_code == 401

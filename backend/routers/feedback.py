@@ -11,10 +11,11 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from backend.core.request_id import get_request_id
 from backend.db.firebase import get_db
+from backend.core.security import get_current_user_token
 from backend.models.diagnosis_models import (
     FeedbackCreate,
     FeedbackDashboardResponse,
@@ -26,7 +27,8 @@ router = APIRouter(prefix="/api/feedback", tags=["Feedback"])
 logger = logging.getLogger("fieldmind.feedback")
 
 
-def _require_uid(x_user_id: Optional[str] = Header(None)) -> str:
+def _require_uid(token: dict = Depends(get_current_user_token)) -> str:
+    x_user_id = token.get("uid")
     if not x_user_id:
         raise HTTPException(
             status_code=401,
@@ -38,14 +40,22 @@ def _require_uid(x_user_id: Optional[str] = Header(None)) -> str:
     return x_user_id
 
 
-def _require_admin(x_user_id: Optional[str] = Header(None)) -> str:
-    """Check that the caller is an admin.
-
-    Admin status is stored in the `users` Firestore collection as
-    ``role == "admin"``.  Falls back gracefully when Firestore is unavailable.
-    """
+def _require_admin(token: dict = Depends(get_current_user_token)) -> str:
+    """Check that the caller is an admin."""
+    x_user_id = token.get("uid")
     if not x_user_id:
         raise HTTPException(status_code=401, detail="Authentication required.")
+
+    from backend.core.config import settings
+    admin_uids = [uid.strip() for uid in settings.ADMIN_UIDS.split(",") if uid.strip()]
+    if not admin_uids:
+        raise HTTPException(
+            status_code=403,
+            detail="Admin access has not been configured for this deployment."
+        )
+
+    if x_user_id in admin_uids:
+        return x_user_id
 
     try:
         db = get_db()
@@ -61,7 +71,7 @@ def _require_admin(x_user_id: Optional[str] = Header(None)) -> str:
                     "request_id": get_request_id(),
                 },
             )
-        data = doc.to_dict()
+        data = doc.to_dict() or {}
         role = data.get("role", "Farmer")
         if role.lower() not in ("admin", "developer"):
             raise HTTPException(

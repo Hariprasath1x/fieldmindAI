@@ -114,6 +114,10 @@ class Settings:
         _env_str("EVALUATION_RESULTS_DIR", "evaluation/results")
     )
 
+    # --- Authorization ---
+    # Comma-separated list of Firebase UIDs that have admin privileges
+    ADMIN_UIDS: str = _env_str("ADMIN_UIDS", "")
+
     # Derived helpers
     @property
     def max_image_size_bytes(self) -> int:

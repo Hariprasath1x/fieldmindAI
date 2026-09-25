@@ -28,7 +28,7 @@ export default function CropRecommendation() {
   const startLocationFlow = () => {
     setMode('location');
     setIsCollecting(true);
-    setLocationStatus('📍 Requesting location permission...');
+    setLocationStatus('📍 Getting your current location...');
     
     if (!navigator.geolocation) {
       handleLocationError('Geolocation is not supported by your browser. Falling back to manual entry.');
@@ -72,7 +72,19 @@ export default function CropRecommendation() {
       },
       (error) => {
         console.error("Geolocation Error:", error);
-        handleLocationError(`Location error (${error.code}): ${error.message}. Falling back to manual entry.`);
+        let msg = "An unknown error occurred while getting location.";
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            msg = "Location access was denied. Please allow location access in your browser settings, or enter your location manually.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            msg = "Your current location is temporarily unavailable. Please try again or enter your location manually.";
+            break;
+          case error.TIMEOUT:
+            msg = "Location detection timed out. Please try again or enter your location manually.";
+            break;
+        }
+        handleLocationError(msg);
       },
       { timeout: 10000, maximumAge: 0, enableHighAccuracy: false }
     );
@@ -84,7 +96,7 @@ export default function CropRecommendation() {
       setMode('manual');
       setIsCollecting(false);
       setLocationStatus('');
-    }, 3000);
+    }, 4000);
   };
 
   const onSubmit = async (data) => {
