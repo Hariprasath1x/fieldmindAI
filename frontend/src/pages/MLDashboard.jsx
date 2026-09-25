@@ -40,7 +40,7 @@ function ModelEvaluationCard({ modelData }) {
           <h5 className="font-semibold text-text-primary mb-1">{name}</h5>
           <div className="text-xs font-semibold text-red-600 mb-2">Status: Evaluation Dataset Unavailable</div>
           <p className="text-sm text-text-secondary">
-            Evaluation dataset is not currently available. No metric is displayed to avoid presenting unverified results.
+            {dataset_message || "No ground-truth evaluation dataset is included for this model."}
           </p>
         </div>
       </div>
@@ -92,35 +92,10 @@ export default function MLDashboard() {
   useEffect(() => {
     if (!user) return;
 
-    const fetchData = async () => {
+    const fetchMLData = async () => {
       try {
-        setLoading(true);
-        // ML Dashboard is public (readonly)
         const mlRes = await getMLDashboard();
         setMlData(mlRes);
-
-        // Try to fetch feedback dashboard.
-        // The backend determines if this user is an admin.
-        try {
-          const fbRes = await getFeedbackDashboard(user.uid);
-          setFeedbackData(fbRes);
-        } catch (err) {
-          if (err.response?.status === 403) {
-            setAccessDenied(true);
-          } else if (err.response?.status === 501 || err.response?.data?.detail === 'Admin access has not been configured for this deployment.') {
-            // New state or just display error? We can handle this with a new state.
-            // But wait, what does the backend return if no admin configured?
-            // Actually, we can just return a specific error from the backend.
-            if (err.response?.data?.detail?.includes("configured")) {
-              setFeedbackData({ _notConfigured: true });
-            } else {
-              setAccessDenied(true);
-            }
-          } else {
-            console.error('Feedback dashboard error:', err);
-            setAccessDenied(true); // default to access denied to fail safely
-          }
-        }
       } catch (err) {
         console.error(err);
         setError('Failed to load dashboard data.');
@@ -128,9 +103,40 @@ export default function MLDashboard() {
         setLoading(false);
       }
     };
-
-    fetchData();
+    fetchMLData();
   }, [user]);
+
+  useEffect(() => {
+    if (!user || !profile) return;
+
+    const fetchFeedbackData = async () => {
+      // Prevent uncontrolled 403 red errors in the console for normal users
+      // by gating the request on the frontend using their profile role.
+      if (profile.role === 'Admin' || profile.role === 'Developer') {
+        try {
+          const fbRes = await getFeedbackDashboard(user.uid);
+          setFeedbackData(fbRes);
+          setAccessDenied(false);
+        } catch (err) {
+          if (err.response?.status === 403) {
+            setAccessDenied(true);
+          } else if (err.response?.status === 501 || err.response?.data?.detail === 'Admin access has not been configured for this deployment.') {
+            if (err.response?.data?.detail?.includes("configured")) {
+              setFeedbackData({ _notConfigured: true });
+            } else {
+              setAccessDenied(true);
+            }
+          } else {
+            console.error('Feedback dashboard error:', err);
+            setAccessDenied(true);
+          }
+        }
+      } else {
+        setAccessDenied(true);
+      }
+    };
+    fetchFeedbackData();
+  }, [user, profile?.role]);
 
   if (!user) {
     return (

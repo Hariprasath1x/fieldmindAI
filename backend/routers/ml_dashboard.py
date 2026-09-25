@@ -153,10 +153,7 @@ def ml_dashboard(admin: Optional[str] = None) -> dict[str, Any]:
             dashboard["models"][model_name] = {
                 "model": model_name,
                 "dataset_available": False,
-                "dataset_message": (
-                    "No evaluation has been run yet. "
-                    "Run: python -m evaluation.evaluate"
-                ),
+                "dataset_message": "No ground-truth evaluation dataset is included for this model.",
             }
 
     return dashboard
@@ -174,10 +171,7 @@ def get_latest_evaluation(
         return {
             "model": model,
             "dataset_available": False,
-            "dataset_message": (
-                f"No evaluation results found for '{model}'. "
-                "Run: python -m evaluation.evaluate"
-            ),
+            "dataset_message": "No ground-truth evaluation dataset is included for this model.",
         }
     return result
 
