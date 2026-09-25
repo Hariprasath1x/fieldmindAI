@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { Droplets, Thermometer, Beaker, CloudRain, Activity, MapPin, Edit2, AlertCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,12 +25,19 @@ export default function CropRecommendation() {
   // Watch form values for the FarmConditionsCard
   const formValues = useWatch({ control });
 
+  // Prevent duplicate requests
+  const locationRequestInProgress = useRef(false);
+
   const startLocationFlow = () => {
+    if (locationRequestInProgress.current) return;
+    locationRequestInProgress.current = true;
+
     setMode('location');
     setIsCollecting(true);
     setLocationStatus('📍 Getting your current location...');
     
     if (!navigator.geolocation) {
+      locationRequestInProgress.current = false;
       handleLocationError('Geolocation is not supported by your browser. Falling back to manual entry.');
       return;
     }
@@ -66,24 +73,27 @@ export default function CropRecommendation() {
           
           setIsCollecting(false);
         } catch (error) {
-          console.error("API Error:", error);
+          console.error("[Location] API Error:", error.message || error);
           handleLocationError(`Failed to fetch environmental data: ${error.message}. Falling back to manual entry.`);
+        } finally {
+          locationRequestInProgress.current = false;
         }
       },
       (error) => {
-        console.error("Geolocation Error:", error);
+        locationRequestInProgress.current = false;
         let msg = "An unknown error occurred while getting location.";
         switch(error.code) {
           case error.PERMISSION_DENIED:
-            msg = "Location access was denied. Please allow location access in your browser settings, or enter your location manually.";
+            msg = "Location permission was denied. Falling back to manual input.";
             break;
           case error.POSITION_UNAVAILABLE:
-            msg = "Your current location is temporarily unavailable. Please try again or enter your location manually.";
+            msg = "Current location is temporarily unavailable. Falling back to manual input.";
             break;
           case error.TIMEOUT:
-            msg = "Location detection timed out. Please try again or enter your location manually.";
+            msg = "Location request timed out. Falling back to manual input.";
             break;
         }
+        console.info(`[Location] ${msg}`);
         handleLocationError(msg);
       },
       { timeout: 10000, maximumAge: 0, enableHighAccuracy: false }
@@ -110,7 +120,9 @@ export default function CropRecommendation() {
         temperature: data.temperature,
         humidity: data.humidity,
         pH: data.ph,
-        rainfall: data.rainfall
+        rainfall: data.rainfall,
+        state: locationDetails?.state || data.state || null,
+        country: locationDetails?.country || (data.state ? 'India' : null)
       };
       
       const response = await recommendCrop(payload);
@@ -158,7 +170,8 @@ export default function CropRecommendation() {
         <div className="flex flex-col sm:flex-row justify-center items-center gap-6 mt-12">
           <button
             onClick={startLocationFlow}
-            className="flex flex-col items-center justify-center p-8 bg-card border-2 border-primary rounded-xl shadow-sm hover:bg-primary/5 transition-all w-full max-w-sm group"
+            disabled={isCollecting}
+            className={`flex flex-col items-center justify-center p-8 bg-card border-2 border-primary rounded-xl shadow-sm transition-all w-full max-w-sm group ${isCollecting ? 'opacity-50 cursor-not-allowed' : 'hover:bg-primary/5'}`}
           >
             <div className="bg-primary text-white p-4 rounded-full mb-4 group-hover:scale-110 transition-transform">
               <MapPin className="w-8 h-8" />
@@ -239,6 +252,36 @@ export default function CropRecommendation() {
                       <InputField label="Temperature (°C)" name="temperature" icon={Thermometer} placeholder="e.g. 28.5" />
                       <InputField label="Humidity (%)" name="humidity" icon={Droplets} placeholder="e.g. 80.2" />
                       <InputField label="Rainfall (mm)" name="rainfall" icon={CloudRain} placeholder="e.g. 200.5" />
+                      
+                      {mode === 'manual' && (
+                        <div className="space-y-2 relative col-span-full md:col-span-1">
+                          <label className="flex items-center text-sm font-medium text-text-primary">
+                            <MapPin className="w-4 h-4 mr-2 text-text-secondary" />
+                            State / Region (Optional)
+                          </label>
+                          <select
+                            {...register("state")}
+                            className="w-full px-4 py-2 bg-white border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
+                          >
+                            <option value="">-- No Region Selected --</option>
+                            <option value="Tamil Nadu">Tamil Nadu</option>
+                            <option value="Kerala">Kerala</option>
+                            <option value="Karnataka">Karnataka</option>
+                            <option value="Andhra Pradesh">Andhra Pradesh</option>
+                            <option value="Telangana">Telangana</option>
+                            <option value="Maharashtra">Maharashtra</option>
+                            <option value="Gujarat">Gujarat</option>
+                            <option value="Rajasthan">Rajasthan</option>
+                            <option value="Punjab">Punjab</option>
+                            <option value="Uttar Pradesh">Uttar Pradesh</option>
+                            <option value="West Bengal">West Bengal</option>
+                            <option value="Assam">Assam</option>
+                            <option value="Odisha">Odisha</option>
+                            <option value="Madhya Pradesh">Madhya Pradesh</option>
+                            <option value="Bihar">Bihar</option>
+                          </select>
+                        </div>
+                      )}
                     </div>
 
                     <div className="pt-4 flex justify-end">
@@ -269,6 +312,16 @@ export default function CropRecommendation() {
                   {results.slice(1).map((crop, idx) => (
                     <AlternativeCropCard key={idx} crop={crop} index={idx + 1} />
                   ))}
+                  
+                  {results.length === 1 && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="bg-card border border-border border-dashed p-6 rounded-xl text-center text-text-secondary"
+                    >
+                      No additional regionally suitable alternatives were found.
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

@@ -225,9 +225,30 @@ graph LR
 ## 11. Crop Recommendation
 
 - **Purpose:** Recommends the most suitable crop to plant given specific environmental data.
-- **Inputs:** Soil metrics (Nitrogen, Phosphorous, Potassium, pH) and Weather metrics (Temperature, Humidity, Rainfall).
-- **Tech:** A Scikit-Learn `RandomForest` / `DecisionTree` model saved as a `.pkl` file.
-- **Flow:** Takes a flat array of environmental floats and outputs a ranked list of recommended crops.
+- **Inputs:** Soil metrics (Nitrogen, Phosphorous, Potassium, pH), Weather metrics (Temperature, Humidity, Rainfall), and optional Location (Region/State).
+- **Tech:** A two-stage pipeline using a Scikit-Learn `RandomForest` / `DecisionTree` model and a custom regional filtering service.
+
+### Crop Recommendation Architecture
+The system combines environmental ML inference with regional suitability context when geographic information is available. When location is unavailable, the system falls back to environmental-only recommendations rather than fabricating geographic context.
+
+```mermaid
+flowchart TD
+    A[GPS / Manual Input] --> B[Location Resolution]
+    B --> C[Environmental Parameters]
+    C --> D[Existing ML Model]
+    D --> E[Environmental Probabilities]
+    E --> F[Regional Suitability Layer]
+    F --> G[Filtering]
+    G --> H[Final Ranking]
+    H --> I[Crop Recommendation UI]
+```
+
+- **What the ML Model Does:** The Scikit-Learn model focuses purely on environmental compatibility. It consumes NPK, temperature, humidity, pH, and rainfall to output base probabilities for crops that can survive those conditions.
+- **What Regional Filtering Does:** A dedicated `regional_crop_service` layers geographic context onto the ML probabilities. It applies positive bonuses for highly suitable regions and strong negative penalties for geographic mismatches.
+- **How GPS is Obtained:** The React frontend securely uses the browser's `navigator.geolocation` API, backed by Nominatim reverse-geocoding to resolve coordinates to a state/country.
+- **How Manual Location Works:** If users opt for manual entry, they can specify their soil metrics and select a State/Region from an optional dropdown.
+- **What Happens When GPS Fails:** If macOS CoreLocation or the browser location provider fails (e.g. `POSITION_UNAVAILABLE`), the system gracefully defaults to manual mode. If no region is selected, it provides an environmental-only recommendation without fabricating location data.
+- **Handling Low-Score Alternatives:** To preserve quality, the system actively filters out alternatives that score too low (either due to extremely low environmental probability or strong regional mismatch penalties). You may see fewer than three alternatives if no other crop satisfies both environmental and regional criteria.
 
 ---
 

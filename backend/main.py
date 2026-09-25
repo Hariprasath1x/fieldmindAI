@@ -202,6 +202,8 @@ class CropRequest(BaseModel):
     humidity: float
     ph: float = Field(..., alias="pH")
     rainfall: float
+    state: str | None = None
+    country: str | None = None
 
 
 @app.post("/predict/crop", tags=["Crop Recommendation"])
@@ -219,18 +221,64 @@ def predict_crop(payload: CropRequest) -> dict[str, Any]:
         dtype=np.float32,
     )
 
+    from backend.services.regional_crop_service import get_regional_suitability
+
     if hasattr(crop_model, "predict_proba"):
         probabilities = crop_model.predict_proba(features)[0]
         classes = list(crop_model.classes_)
-        top_indices = np.argsort(probabilities)[-3:][::-1]
+        
+        scored_crops = []
+        for i, prob in enumerate(probabilities):
+            crop_name = str(classes[i])
+            env_score = float(prob) * 100
+            
+            # Apply regional suitability if location is provided
+            regional_info = get_regional_suitability(crop_name, payload.state, payload.country)
+            final_score = env_score + regional_info["score_modifier"]
+            
+            scored_crops.append({
+                "crop_name": crop_name,
+                "env_score": env_score,
+                "final_score": final_score,
+                "regional_info": regional_info
+            })
+            
+        # Sort by final score descending
+        scored_crops.sort(key=lambda x: x["final_score"], reverse=True)
+
+        valid_items = []
+        for item in scored_crops:
+            # Absolute baseline: Environmental probability must be at least somewhat viable
+            if item["env_score"] < 10.0:
+                continue
+                
+            # If we already have a primary recommendation, strictly filter alternatives
+            if len(valid_items) > 0:
+                # Do not show crops that have a regional penalty or a low final combined score
+                if item["final_score"] < 25.0 or item["regional_info"]["score_modifier"] < 0:
+                    continue
+
+            valid_items.append(item)
+            if len(valid_items) >= 3:
+                break
+                
+        # If no crops passed the 10% threshold (extremely rare), fallback to the absolute highest env_score crop
+        if not valid_items and scored_crops:
+            # Sort back by raw env_score just to ensure we return *something* that the model favored
+            best_env = max(scored_crops, key=lambda x: x["env_score"])
+            valid_items.append(best_env)
 
         recommendations = []
-        for i, idx in enumerate(top_indices):
-            crop_name = str(classes[idx])
-            confidence = round(float(probabilities[idx]) * 100, 2)
+        for i, item in enumerate(valid_items):
+            crop_name = item["crop_name"]
+            confidence = round(item["env_score"], 2)
             metadata = get_crop_metadata(crop_name)
             is_top = i == 0
             reasons = generate_reasons(crop_name, payload, is_top)
+            
+            # Insert regional context reason at the top
+            reasons.insert(0, item["regional_info"]["message"])
+
             recommendations.append(
                 {
                     "crop": crop_name,
@@ -241,6 +289,7 @@ def predict_crop(payload: CropRequest) -> dict[str, Any]:
                     "difficulty": metadata["difficulty"],
                     "description": metadata["description"],
                     "reasons": reasons,
+                    "regional_info": item["regional_info"]
                 }
             )
         return {"recommendations": recommendations}
@@ -254,6 +303,8 @@ def predict_crop(payload: CropRequest) -> dict[str, Any]:
     crop_name = str(prediction)
     metadata = get_crop_metadata(crop_name)
     reasons = generate_reasons(crop_name, payload, True)
+    regional_info = get_regional_suitability(crop_name, payload.state, payload.country)
+    reasons.insert(0, regional_info["message"])
     return {
         "recommendations": [
             {
@@ -265,6 +316,7 @@ def predict_crop(payload: CropRequest) -> dict[str, Any]:
                 "difficulty": metadata["difficulty"],
                 "description": metadata["description"],
                 "reasons": reasons,
+                "regional_info": regional_info
             }
         ]
     }

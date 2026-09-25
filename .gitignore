@@ -56,6 +56,12 @@ train_leaf_verifier.py
 
 # Keep formal ML regression tests tracked
 !tests/ml/
+!tests/api/
+!tests/unit/
+!tests/api/test_*.py
+!tests/unit/test_*.py
+!tests/ml/test_leaf_verifier.py
+!tests/ml/test_images/
 !tests/ml/test_leaf_verifier.py
 !tests/ml/test_images/
 
