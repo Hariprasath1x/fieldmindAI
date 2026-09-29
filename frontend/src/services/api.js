@@ -14,9 +14,13 @@ import { auth } from './firebase';
 
 apiClient.interceptors.request.use(
   async (config) => {
-    if (auth.currentUser) {
-      const token = await auth.currentUser.getIdToken();
-      config.headers['Authorization'] = `Bearer ${token}`;
+    if (!config.headers['Authorization'] && auth.currentUser) {
+      try {
+        const token = await auth.currentUser.getIdToken();
+        config.headers['Authorization'] = `Bearer ${token}`;
+      } catch (error) {
+        console.warn('[API] Failed to get auth token:', error);
+      }
     }
     return config;
   },

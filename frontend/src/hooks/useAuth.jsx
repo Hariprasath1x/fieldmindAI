@@ -41,9 +41,14 @@ export const AuthProvider = ({ children }) => {
           if (currentUser.phoneNumber) {
             syncPayload.phone = currentUser.phoneNumber;
           }
-          await apiClient.post('/api/marketplace/users/sync', syncPayload);
+          const token = await currentUser.getIdToken();
+          await apiClient.post('/api/marketplace/users/sync', syncPayload, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
           
-          const profileRes = await apiClient.get(`/api/marketplace/users/${currentUser.uid}`);
+          const profileRes = await apiClient.get(`/api/marketplace/users/${currentUser.uid}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
           setProfile(profileRes.data); // upgrade to full backend profile
         } catch (error) {
           console.warn('[AUTH] Backend sync failed (using Firebase profile fallback):', error.message);

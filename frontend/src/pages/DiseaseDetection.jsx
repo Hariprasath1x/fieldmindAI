@@ -29,11 +29,12 @@ const STEPS = [
   { title: 'Diagnosis Ready', description: 'Generating treatment recommendations.' },
 ];
 
-// ── Stage to step index mapping ─────────────────────────────────────────────────
 const STAGE_STEP = {
   queued: 1,
   processing: 1,
+  image_validation: 1,
   validating_image: 1,
+  leaf_verification: 2,
   verifying_leaf: 2,
   classifying_disease: 3,
   analysing_severity: 4,
@@ -163,12 +164,14 @@ export default function DiseaseDetection() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+  const [failedStep, setFailedStep] = useState(null);
   const [plantId, setPlantId] = useState('');
 
   const handleUpload = (uploadedFile) => {
     setFile(uploadedFile);
     setResults(null);
     setError(null);
+    setFailedStep(null);
     if (uploadedFile) setCurrentStep(1);
     else setCurrentStep(0);
   };
@@ -177,6 +180,7 @@ export default function DiseaseDetection() {
     if (!file) return;
     setIsProcessing(true);
     setError(null);
+    setFailedStep(null);
     setCurrentStep(1);
 
     try {
@@ -225,7 +229,10 @@ export default function DiseaseDetection() {
         statusData.error ||
         'Analysis failed. Please upload a clearer leaf image.';
       setError(userMsg);
-      setCurrentStep(1);
+      const failedStage = result?.stage_failed || statusData.stage || statusData.status;
+      const step = STAGE_STEP[failedStage] ?? 1;
+      setCurrentStep(step);
+      setFailedStep(step);
       return;
     }
 
@@ -301,7 +308,7 @@ export default function DiseaseDetection() {
           <h2 className="text-xl font-bold text-text-primary mb-6">
             {isProcessing ? 'Analysing...' : 'Processing Steps'}
           </h2>
-          <Timeline currentStep={currentStep} steps={STEPS} />
+          <Timeline currentStep={currentStep} steps={STEPS} failedStep={failedStep} />
         </div>
       )}
 
