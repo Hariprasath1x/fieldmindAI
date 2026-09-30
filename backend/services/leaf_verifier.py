@@ -202,6 +202,8 @@ class LeafVerifier:
         confidence = float(probabilities[top_index])
         predicted_label = self.labels[top_index] if top_index < len(self.labels) else str(top_index)
         normalized_label = predicted_label.lower()
+        
+        leaf_prob = float(probabilities[self.labels.index(self.leaf_label)])
 
         if normalized_label == self.non_leaf_label.lower() and confidence >= 0.90:
             verification = {
@@ -216,15 +218,21 @@ class LeafVerifier:
             message = "The image clearly does not contain a plant leaf."
         else:
             is_leaf = (normalized_label == self.leaf_label.lower())
+            status = "verified" if (is_leaf and confidence >= self.confidence_threshold) else "uncertain"
             verification = {
                 "is_leaf": is_leaf,
-                "status": "verified" if (is_leaf and confidence >= self.confidence_threshold) else "uncertain",
-                "confidence": confidence,
+                "status": status,
+                "confidence": confidence if is_leaf else leaf_prob,
                 "predicted_class": predicted_label,
                 "threshold": self.confidence_threshold,
             }
-            pipeline = {"allow_processing": True, "next_step": "disease_detection"}
-            message = None
+            if status == "verified":
+                pipeline = {"allow_processing": True, "next_step": "disease_detection"}
+                message = None
+            else:
+                pipeline = {"allow_processing": False, "next_step": "upload_again"}
+                message = "The image could not be verified as a leaf with sufficient confidence."
+                verification["error_code"] = "UNCERTAIN_LEAF"
 
         response: dict[str, Any] = {
             "success": True,

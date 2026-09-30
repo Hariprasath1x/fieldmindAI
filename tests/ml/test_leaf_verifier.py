@@ -87,3 +87,64 @@ def test_leaf_verifier_predictions(leaf_verifier):
         leaf_verifier.predict(img_h)
     except FileNotFoundError:
         pass
+
+def test_leaf_verifier_confidence_reporting_invariant(leaf_verifier, monkeypatch):
+    import numpy as np
+    from backend.services.leaf_verifier import softmax
+    
+    test_images_dir = Path("tests/ml/test_images")
+    try:
+        img_a = Image.open(test_images_dir / "A_clear_leaf.jpg")
+    except FileNotFoundError:
+        pytest.skip("Test image not found")
+        
+    # 1. Verified (leaf > threshold)
+    def mock_run_verified(*args, **kwargs):
+        # logits: non_leaf=0.0, leaf=2.944 (softmax ~ 0.05, 0.95)
+        return [np.array([0.0, 2.944], dtype=np.float32)]
+    
+    monkeypatch.setattr(leaf_verifier.session, "run", mock_run_verified)
+    result = leaf_verifier.predict(img_a)
+    assert result["verification"]["status"] == "verified"
+    assert result["verification"]["predicted_class"] == "leaf"
+    assert abs(result["verification"]["confidence"] - 0.95) < 0.01
+
+    # 2. Rejected (non_leaf >= 0.90)
+    def mock_run_rejected(*args, **kwargs):
+        # logits: non_leaf=2.944, leaf=0.0 (softmax ~ 0.95, 0.05)
+        return [np.array([2.944, 0.0], dtype=np.float32)]
+        
+    monkeypatch.setattr(leaf_verifier.session, "run", mock_run_rejected)
+    result = leaf_verifier.predict(img_a)
+    assert result["verification"]["status"] == "rejected"
+    assert result["verification"]["predicted_class"] == "non_leaf"
+    assert abs(result["verification"]["confidence"] - 0.95) < 0.01
+
+    # 3. Uncertain due to non_leaf but < 0.90
+    def mock_run_uncertain_non_leaf(*args, **kwargs):
+        # logits: non_leaf=1.734, leaf=0.0 (softmax ~ 0.85, 0.15)
+        return [np.array([1.734, 0.0], dtype=np.float32)]
+        
+    monkeypatch.setattr(leaf_verifier.session, "run", mock_run_uncertain_non_leaf)
+    result = leaf_verifier.predict(img_a)
+    assert result["verification"]["status"] == "uncertain"
+    assert result["verification"]["predicted_class"] == "non_leaf"
+    # The invariant: should return leaf probability (~0.15), not max class (0.85)
+    assert abs(result["verification"]["confidence"] - 0.15) < 0.01
+
+    # 4. Uncertain due to leaf but < threshold (e.g. 0.40 leaf, threshold 0.50)
+    def mock_run_uncertain_leaf(*args, **kwargs):
+        # logits: non_leaf=0.405, leaf=0.0 (softmax ~ 0.60, 0.40)
+        return [np.array([0.405, 0.0], dtype=np.float32)]
+        
+    monkeypatch.setattr(leaf_verifier.session, "run", mock_run_uncertain_leaf)
+    result = leaf_verifier.predict(img_a)
+    # wait, if top class is non_leaf (0.60), then it's case 3 again.
+    pass
+
+    def mock_run_uncertain_leaf2(*args, **kwargs):
+        # logits: non_leaf=0.0, leaf=-0.405 (softmax ~ 0.60, 0.40) -> non-leaf is higher.
+        # to make leaf higher but < 0.50 is impossible for binary classification!
+        # If leaf is top class, its probability MUST be >= 0.50.
+        # Since threshold is 0.50, any "leaf" top prediction will be >= 0.50, thus ALWAYS verified!
+        pass
