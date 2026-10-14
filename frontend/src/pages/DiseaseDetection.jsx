@@ -222,6 +222,11 @@ export default function DiseaseDetection() {
 
   const handleResult = (statusData) => {
     const result = statusData.result;
+    
+    if (result) {
+      setResults(result);
+    }
+
     if (!result || !result.success) {
       const userMsg =
         result?.user_message ||
@@ -236,7 +241,6 @@ export default function DiseaseDetection() {
       return;
     }
 
-    setResults(result);
     setCurrentStep(5);
   };
 
@@ -249,6 +253,8 @@ export default function DiseaseDetection() {
   const diseaseName = formatDiseaseLabel(results?.disease);
   const inferredCrop = formatCropLabel(results?.disease);
   const isVerified = results?.verification?.status === 'verified';
+  const isRejected = results?.verification?.status === 'rejected';
+  const isUncertain = results?.verification?.status === 'uncertain';
   const verificationConfPct = results?.verification?.confidence != null
     ? Math.round(results.verification.confidence * 100)
     : null;
@@ -308,13 +314,50 @@ export default function DiseaseDetection() {
           <h2 className="text-xl font-bold text-text-primary mb-6">
             {isProcessing ? 'Analysing...' : 'Processing Steps'}
           </h2>
-          <Timeline currentStep={currentStep} steps={STEPS} failedStep={failedStep} />
+          <Timeline 
+            currentStep={currentStep} 
+            steps={STEPS} 
+            failedStep={isUncertain ? null : failedStep} 
+            warningStep={isUncertain ? failedStep : null} 
+          />
         </div>
       )}
 
       {/* Results */}
       <AnimatePresence>
-        {results && currentStep === 5 && (
+        {results?.verification && (currentStep === 5 || !results.success) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <div className="bg-card p-6 md:p-8 rounded-xl shadow-sm border border-border">
+              <h2 className="text-xl font-bold text-text-primary mb-4">Leaf Verification</h2>
+              <div className="flex items-start gap-4">
+                <div className={`p-3 rounded-full ${isVerified ? 'bg-green-100 text-green-700' : isRejected ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                  {isVerified ? <CheckCircle className="h-6 w-6" /> : isRejected ? <ShieldAlert className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
+                </div>
+                <div>
+                  <h3 className={`text-lg font-bold uppercase ${isVerified ? 'text-green-700' : isRejected ? 'text-red-700' : 'text-yellow-700'}`}>
+                    {isVerified ? '✓ LEAF DETECTED' : isRejected ? '✕ NOT A LEAF' : 'UNCERTAIN'}
+                  </h3>
+                  <p className="text-sm font-medium text-text-secondary mb-1">
+                    Confidence: {verificationConfPct !== null ? `${verificationConfPct}%` : 'N/A'}
+                  </p>
+                  <p className="text-text-secondary text-sm">
+                    {isVerified 
+                      ? 'The image appears to contain a leaf and is proceeding to disease classification.' 
+                      : isRejected 
+                      ? 'The uploaded image does not appear to contain a usable leaf.' 
+                      : 'Please upload a clearer image of the leaf.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {isVerified && results && currentStep === 5 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -337,40 +380,49 @@ export default function DiseaseDetection() {
               {/* 1. Possible Disease */}
               <div className="mb-6">
                 <p className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-1">
-                  Possible Disease
+                  {confidenceLevel === 'low' ? 'Uncertain Diagnosis' : 'Possible Disease'}
                 </p>
-                <div className="flex items-start justify-between flex-wrap gap-3">
-                  <h3 className="text-2xl font-bold text-text-primary">
-                    {diseaseName || results.disease?.replace(/_/g, ' ')}
-                  </h3>
-                  <span
-                    className={`flex items-center gap-1 px-3 py-1 rounded-full border text-sm font-semibold ${CONFIDENCE_COLORS[confidenceLevel]}`}
-                  >
-                    {CONFIDENCE_LABELS[confidenceLevel]}
-                    {confidencePct !== null && ` · ${confidencePct}%`}
-                  </span>
-                </div>
+                {confidenceLevel === 'low' ? (
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-red-800 mb-2">
+                          FieldMind could not confidently identify this disease. Please upload a clearer image showing the affected area.
+                        </p>
+                        <p className="text-xs text-red-700">
+                          Low confidence prediction: <strong>{diseaseName || results.disease?.replace(/_/g, ' ')}</strong> ({confidencePct !== null ? `${confidencePct}%` : 'N/A'})
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-start justify-between flex-wrap gap-3">
+                      <h3 className="text-2xl font-bold text-text-primary">
+                        {diseaseName || results.disease?.replace(/_/g, ' ')}
+                      </h3>
+                      <span
+                        className={`flex items-center gap-1 px-3 py-1 rounded-full border text-sm font-semibold ${CONFIDENCE_COLORS[confidenceLevel]}`}
+                      >
+                        {CONFIDENCE_LABELS[confidenceLevel]}
+                        {confidencePct !== null && ` · ${confidencePct}%`}
+                      </span>
+                    </div>
 
-                {/* Inferred crop note */}
-                {inferredCrop && (
-                  <p className="mt-2 text-sm text-text-secondary flex items-center gap-1.5">
-                    <AlertCircle className="h-4 w-4 shrink-0 text-yellow-500" />
-                    Model associated this with <strong className="text-text-primary">{inferredCrop}</strong>. Crop identity may be incorrect — verify before applying treatment.
-                  </p>
+                    {/* Inferred crop note */}
+                    {inferredCrop && (
+                      <p className="mt-2 text-sm text-text-secondary flex items-center gap-1.5">
+                        <AlertCircle className="h-4 w-4 shrink-0 text-yellow-500" />
+                        Model associated this with <strong className="text-text-primary">{inferredCrop}</strong>. Crop identity may be incorrect — verify before applying treatment.
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
 
-              {/* 2. Leaf Verification Status */}
-              <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-3 bg-background-app rounded-lg border border-border">
-                  <p className="text-xs font-medium text-text-secondary uppercase tracking-wide mb-1">Leaf Verification</p>
-                  <p className="text-sm font-semibold text-text-primary capitalize">
-                    {results.verification?.status || 'N/A'}
-                    {verificationConfPct !== null && (
-                      <span className="text-text-secondary font-normal ml-1">({verificationConfPct}%)</span>
-                    )}
-                  </p>
-                </div>
+              {/* 2. Additional Image & Severity Data */}
+              <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 {results.severity?.affected_area_pct != null && (
                   <div className="p-3 bg-background-app rounded-lg border border-border">
@@ -420,22 +472,17 @@ export default function DiseaseDetection() {
                 </div>
               )}
 
-              {/* 4. Visual Findings (Severity Detections) */}
+              {/* 4. Severity Analysis (YOLO) */}
               {results.severity?.detections?.length > 0 && (
                 <div className="mb-6">
                   <div className="flex items-center gap-2 mb-3">
                     <Microscope className="h-4 w-4 text-text-secondary" />
-                    <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">Visual Findings</h4>
+                    <h4 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">Severity Analysis</h4>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {[...new Set(results.severity.detections.map(d => d.label))].map((label, idx) => (
-                      <span
-                        key={idx}
-                        className="px-3 py-1 text-xs font-medium bg-orange-50 text-orange-800 border border-orange-200 rounded-full capitalize"
-                      >
-                        • {label} detected
-                      </span>
-                    ))}
+                    <span className="px-3 py-1 text-xs font-medium bg-orange-50 text-orange-800 border border-orange-200 rounded-full">
+                      • {results.severity.detections.length} affected region{results.severity.detections.length !== 1 ? 's' : ''} detected
+                    </span>
                   </div>
                 </div>
               )}

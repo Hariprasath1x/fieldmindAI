@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FieldMind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --card: #ffffff;
+    --ink: #1f2a37;
+    --muted: #5f7080;
+    --green: #44803a;
+    --green-d: #2f6a2d;
+    --green-soft: #e6efe1;
+    --amber: #e8a33d;
+    --border: #e4e1d9;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--ink); overflow: hidden; }
+
+  .page { position: relative; height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* HEADER */
+  .top {
+    position: relative; z-index: 5; flex: none; background: var(--green);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 clamp(20px, 5vw, 80px); height: clamp(58px, 8.5vh, 74px);
+    box-shadow: 0 2px 12px rgba(30,60,28,.25);
+  }
+  .brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 700; font-size: 22px; letter-spacing: -.01em; text-decoration: none; }
+  .brand svg { width: 30px; height: 30px; }
+  .auth { display: flex; gap: 10px; }
+  .a-btn { text-decoration: none; font-size: 14.5px; font-weight: 600; padding: 9px 20px; border-radius: 8px; transition: transform .15s, background .15s; }
+  .a-login { color: #fff; border: 1.5px solid rgba(255,255,255,.75); }
+  .a-login:hover { background: rgba(255,255,255,.14); }
+  .a-reg { background: #fff; color: var(--green-d); }
+  .a-reg:hover { transform: translateY(-1px); }
+
+  /* BACKGROUND DECOR */
+  .blob { position: absolute; border-radius: 50%; filter: blur(70px); pointer-events: none; }
+  .b1 { width: 420px; height: 420px; background: rgba(68,128,58,.16); left: -120px; top: 80px; }
+  .b2 { width: 380px; height: 380px; background: rgba(232,163,61,.18); right: -80px; bottom: 90px; }
+  .dots { position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(rgba(68,128,58,.17) 1.2px, transparent 1.2px); background-size: 28px 28px; mask-image: radial-gradient(ellipse at 70% 45%, #000 10%, transparent 70%); -webkit-mask-image: radial-gradient(ellipse at 70% 45%, #000 10%, transparent 70%); }
+
+  /* MAIN */
+  .main { position: relative; z-index: 2; flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .left { display: flex; flex-direction: column; justify-content: center; padding: clamp(12px, 3vh, 32px) clamp(24px, 4vw, 40px) clamp(12px, 3vh, 32px) clamp(24px, 5vw, 80px); }
+  .tag { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; background: var(--green-soft); color: var(--green-d); font-size: 12.5px; font-weight: 600; letter-spacing: .05em; padding: 7px 14px; border-radius: 999px; margin-bottom: clamp(12px, 2.6vh, 24px); }
+  .tag i { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 9px rgba(68,128,58,0) } 0% { box-shadow: 0 0 0 0 rgba(68,128,58,.5) } 100% { box-shadow: 0 0 0 0 rgba(68,128,58,0) } }
+  h1 { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: clamp(40px, min(5.8vw, 10.2vh), 90px); line-height: 1; letter-spacing: -.04em; margin-bottom: clamp(14px, 2.8vh, 24px); }
+  h1 em { font-style: normal; color: var(--green); position: relative; white-space: nowrap; }
+  h1 em::after { content: ""; position: absolute; left: 0; right: 0; bottom: -.05em; height: .12em; background: var(--amber); border-radius: 6px; transform-origin: left; animation: draw 1s .7s both cubic-bezier(.2,.8,.2,1); opacity: .85; }
+  @keyframes draw { from { transform: scaleX(0) } to { transform: scaleX(1) } }
+  .sub { font-size: clamp(15px, 2.1vh, 19px); line-height: 1.6; color: var(--muted); max-width: 520px; margin-bottom: clamp(18px, 3.4vh, 30px); }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: clamp(14px, 2.8vh, 26px); }
+  .btn { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-size: 16px; font-weight: 600; padding: 15px 26px; border-radius: 10px; transition: transform .15s, box-shadow .15s, background .15s; }
+  .btn-p { background: var(--green-d); color: #fff; box-shadow: 0 10px 24px rgba(47,106,45,.3); }
+  .btn-p:hover { transform: translateY(-2px); background: #265824; }
+  .btn-p svg { width: 18px; height: 18px; transition: transform .15s; }
+  .btn-p:hover svg { transform: translateX(4px); }
+  .btn-o { background: #fff; color: var(--green-d); border: 1.5px solid #b9d0b2; }
+  .btn-o:hover { border-color: var(--green-d); transform: translateY(-2px); }
+  .also { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+  .also span.c { background: #fff; border: 1px solid var(--border); padding: 6px 12px; border-radius: 999px; color: var(--ink); font-weight: 500; }
+
+  /* RIGHT / LEAF SCAN */
+  .right { display: grid; place-items: center; padding: clamp(8px, 2vh, 20px) clamp(16px, 4vw, 64px) clamp(8px, 2vh, 20px) 0; min-height: 0; }
+  .stage { position: relative; width: 100%; max-width: 560px; height: min(100%, 560px); display: grid; place-items: center; }
+  .disc { position: absolute; width: 82%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, var(--green-soft) 70%); box-shadow: inset 0 0 0 1px rgba(68,128,58,.15); max-height: 96%; }
+  .ring2 { position: absolute; width: 96%; aspect-ratio: 1; border-radius: 50%; border: 1.5px dashed rgba(68,128,58,.3); max-height: 100%; animation: spin 40s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg) } }
+  .leafbox { position: relative; height: 82%; aspect-ratio: 400 / 440; animation: sway 7s ease-in-out infinite; transform-origin: 50% 100%; }
+  @keyframes sway { 0%,100% { transform: rotate(-2deg) } 50% { transform: rotate(2deg) } }
+  .leafbox svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 22px 24px rgba(30,60,28,.28)); }
+  .scan { position: absolute; left: -6%; right: -6%; height: 3px; top: 0; border-radius: 3px; background: linear-gradient(90deg, transparent, #9ef08f, transparent); box-shadow: 0 0 18px 6px rgba(158,240,143,.55); animation: scan 7s infinite ease-in-out; }
+  @keyframes scan { 0% { top: 2%; opacity: 0 } 3% { opacity: 1 } 52% { top: 96%; opacity: 1 } 56%, 100% { top: 96%; opacity: 0 } }
+  .halo { transform-box: fill-box; transform-origin: center; animation: halo 2.4s ease-in-out infinite; }
+  @keyframes halo { 0%,100% { transform: scale(1); opacity: .5 } 50% { transform: scale(1.25); opacity: .85 } }
+  .bx { transform-box: fill-box; transform-origin: center; opacity: 0; }
+  .bx1 { animation: bx1 7s infinite; } .bx2 { animation: bx2 7s infinite; }
+  @keyframes bx1 { 0%,22% { opacity: 0; transform: scale(1.18) } 26% { opacity: 1; transform: scale(1) } 90% { opacity: 1 } 96%,100% { opacity: 0 } }
+  @keyframes bx2 { 0%,30% { opacity: 0; transform: scale(1.18) } 34% { opacity: 1; transform: scale(1) } 90% { opacity: 1 } 96%,100% { opacity: 0 } }
+
+  .card { position: absolute; z-index: 4; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 13px 15px; box-shadow: 0 18px 44px rgba(31,42,55,.16); font-size: 13px; }
+  .card .k { font-size: 11px; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: flex; align-items: center; gap: 7px; }
+  .verify { top: 8%; left: 0; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 999px; font-weight: 600; font-size: 13px; animation: vchip 7s infinite; }
+  .verify .ck { width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: #fff; display: grid; place-items: center; }
+  .verify .ck svg { width: 13px; height: 13px; }
+  @keyframes vchip { 0%,4% { opacity: 0; transform: translateY(10px) } 9% { opacity: 1; transform: none } 90% { opacity: 1 } 96%,100% { opacity: 0 } }
+
+  .result { bottom: 5%; right: 0; width: 232px; animation: res 7s infinite; }
+  .result .dz { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .result .ic { width: 36px; height: 36px; border-radius: 11px; background: #fcefd9; color: #c47f12; display: grid; place-items: center; flex: none; }
+  .result .ic svg { width: 20px; height: 20px; }
+  .result b { display: block; font-size: 14.5px; }
+  .result small { color: var(--muted); font-size: 12px; }
+  .meter { height: 7px; background: #eceae3; border-radius: 99px; overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 94%; background: linear-gradient(90deg, #f2b94d, var(--green)); border-radius: 99px; transform-origin: left; animation: fillbar 7s infinite; }
+  .conf { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); margin-top: 6px; }
+  @keyframes res { 0%,56% { opacity: 0; transform: translateY(14px) } 62% { opacity: 1; transform: none } 90% { opacity: 1 } 96%,100% { opacity: 0 } }
+  @keyframes fillbar { 0%,58% { transform: scaleX(0) } 70%,100% { transform: scaleX(1) } }
+
+  .recs { bottom: 3%; left: -2%; width: 214px; animation: float 8s -3s ease-in-out infinite; }
+  @keyframes float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-9px) } }
+  .rec { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; font-size: 12.5px; font-weight: 500; }
+  .rec:last-of-type { margin-bottom: 0; }
+  .rec span.n { width: 62px; flex: none; }
+  .rec .t { flex: 1; height: 6px; background: #eceae3; border-radius: 99px; overflow: hidden; }
+  .rec .t i { display: block; height: 100%; background: var(--green); border-radius: 99px; width: 0; animation: grow 1.4s 1.2s forwards cubic-bezier(.2,.8,.2,1); }
+  .rec em { font-style: normal; font-size: 11.5px; color: var(--muted); width: 30px; text-align: right; }
+  @keyframes grow { to { width: var(--w); } }
+  .env { margin-top: 10px; font-size: 11.5px; color: var(--muted); display: flex; gap: 6px; flex-wrap: wrap; }
+  .env span { background: var(--green-soft); color: var(--green-d); padding: 3px 9px; border-radius: 99px; font-weight: 500; }
+  .sample { position: absolute; right: 0; top: 2%; font-size: 11px; color: var(--muted); opacity: .75; }
+
+  /* STEPS */
+  .steps { position: relative; z-index: 2; flex: none; background: #fff; border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(3, 1fr); padding: clamp(10px, 1.8vh, 16px) clamp(20px, 5vw, 80px); gap: 12px; }
+  .step { display: flex; align-items: center; gap: 14px; position: relative; }
+  .step .no { width: 38px; height: 38px; border-radius: 50%; flex: none; display: grid; place-items: center; font-weight: 700; font-size: 15px; background: var(--green-soft); color: var(--green-d); }
+  .step:nth-child(2) .no { background: #fcefd9; color: #c47f12; }
+  .step b { display: block; font-size: 15px; }
+  .step span { font-size: 13px; color: var(--muted); }
+  .step:not(:last-child)::after { content: ""; position: absolute; right: 4%; top: 50%; width: 22px; height: 2px; background: repeating-linear-gradient(90deg, #c9c6bb 0 4px, transparent 4px 8px); }
+
+  /* entrance */
+  .tag, h1, .sub, .cta, .also { animation: rise .8s both cubic-bezier(.2,.8,.2,1); }
+  h1 { animation-delay: .08s } .sub { animation-delay: .16s } .cta { animation-delay: .24s } .also { animation-delay: .32s }
+  @keyframes rise { from { opacity: 0; transform: translateY(18px) } to { opacity: 1; transform: none } }
+
+  @media (max-width: 900px) {
+    body { overflow-y: auto; }
+    .page { height: auto; min-height: 100dvh; }
+    .main { grid-template-columns: 1fr; }
+    .left { padding: 34px 22px 6px; }
+    .right { padding: 8px 16px 30px; }
+    .stage { height: 520px; }
+    .steps { grid-template-columns: 1fr; padding: 18px 22px; }
+    .step:not(:last-child)::after { display: none; }
+    .recs { display: none; }
+  }
+  @media (max-height: 680px) and (min-width: 901px) { .steps, .also, .recs { display: none; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; } .bx, .verify, .result { opacity: 1; } .rec .t i { width: var(--w); } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <a class="brand" href="/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>
+      FieldMind
+    </a>
+    <div class="auth">
+      <a class="a-btn a-login" href="/login">Login</a>
+      <a class="a-btn a-reg" href="/register">Register</a>
+    </div>
+  </header>
+
+  <div class="blob b1"></div><div class="blob b2"></div><div class="dots"></div>
+
+  <div class="main">
+    <section class="left">
+      <span class="tag"><i></i> AI-Powered Crop Intelligence</span>
+      <h1>Healthier crops,<br>from a <em>single leaf.</em></h1>
+      <p class="sub">Upload a leaf photo and get an AI diagnosis in moments, then find the best crops for your soil and climate. Built for farmers.</p>
+      <div class="cta">
+        <a class="btn btn-p" href="/detect">Detect Disease
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a class="btn btn-o" href="/recommend">Recommend Crop</a>
+      </div>
+      <div class="also">Also inside:
+        <span class="c">Diagnosis History</span><span class="c">Equipment Rental</span><span class="c">Farm Workforce</span>
+      </div>
+    </section>
+
+    <section class="right">
+      <div class="stage">
+        <div class="disc"></div><div class="ring2"></div>
+
+        <div class="card verify">
+          <span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+          Valid plant leaf
+        </div>
+
+        <div class="leafbox">
+          <svg viewBox="0 0 400 440">
+            <defs>
+              <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#76bb5f"/><stop offset="1" stop-color="#3b7a33"/></linearGradient>
+            </defs>
+            <path d="M200,425 L200,438" stroke="#2f6a2d" stroke-width="7" stroke-linecap="round"/>
+            <path d="M200,20 C330,70 380,210 300,340 C270,385 230,410 200,425 C170,410 130,385 100,340 C20,210 70,70 200,20 Z" fill="url(#lg)" stroke="#2f6a2d" stroke-width="2.5"/>
+            <path d="M200,20 C70,70 20,210 100,340 C130,385 170,410 200,425 Z" fill="rgba(0,0,0,.09)"/>
+            <g fill="none" stroke="rgba(214,238,200,.85)" stroke-linecap="round">
+              <path d="M200,30 C196,150 204,300 200,428" stroke-width="4.5"/>
+              <g stroke-width="2.6">
+                <path d="M199,90 C170,100 140,115 112,140"/><path d="M199,150 C165,160 130,180 92,215"/><path d="M199,215 C165,225 130,245 100,285"/><path d="M199,280 C175,290 150,305 128,330"/>
+                <path d="M201,90 C230,100 260,115 288,140"/><path d="M201,150 C235,160 270,180 308,215"/><path d="M201,215 C235,225 270,245 300,285"/><path d="M201,280 C225,290 250,305 272,330"/>
+              </g>
+            </g>
+            <!-- lesions -->
+            <circle class="halo" cx="150" cy="175" r="24" fill="rgba(222,190,70,.55)"/>
+            <circle cx="150" cy="175" r="13" fill="#7a4a22"/><circle cx="150" cy="175" r="6" fill="#4d2c12"/>
+            <circle class="halo" cx="252" cy="235" r="29" fill="rgba(222,190,70,.55)" style="animation-delay:-1s"/>
+            <circle cx="252" cy="235" r="17" fill="#7a4a22"/><circle cx="252" cy="235" r="8" fill="#4d2c12"/>
+            <circle cx="190" cy="320" r="9" fill="#7a4a22" opacity=".9"/><circle cx="190" cy="320" r="4" fill="#4d2c12"/>
+            <!-- detection boxes -->
+            <g class="bx bx1">
+              <rect x="114" y="139" width="72" height="72" rx="8" fill="rgba(232,163,61,.1)" stroke="#e8a33d" stroke-width="3"/>
+              <rect x="114" y="117" width="98" height="22" rx="6" fill="#e8a33d"/>
+              <text x="123" y="132.5" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#fff">Early blight</text>
+            </g>
+            <g class="bx bx2">
+              <rect x="208" y="191" width="88" height="88" rx="8" fill="rgba(232,163,61,.1)" stroke="#e8a33d" stroke-width="3"/>
+              <rect x="208" y="169" width="98" height="22" rx="6" fill="#e8a33d"/>
+              <text x="217" y="184.5" font-family="Inter, sans-serif" font-size="12" font-weight="700" fill="#fff">Early blight</text>
+            </g>
+          </svg>
+          <div class="scan"></div>
+        </div>
+
+        <div class="card result">
+          <div class="k">Diagnosis</div>
+          <div class="dz">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2v2"/><path d="M5 2v2"/><path d="M5 3H4a2 2 0 0 0-2 2v4a6 6 0 0 0 12 0V5a2 2 0 0 0-2-2h-1"/><path d="M8 15a6 6 0 0 0 12 0v-3"/><circle cx="20" cy="10" r="2"/></svg></div>
+            <div><b>Early Blight</b><small>Tomato leaf</small></div>
+          </div>
+          <div class="meter"><i></i></div>
+          <div class="conf"><span>Confidence</span><span>94%</span></div>
+        </div>
+
+        <div class="card recs">
+          <div class="k">Crop recommendation</div>
+          <div class="rec"><span class="n">Rice</span><div class="t"><i style="--w:92%"></i></div><em>92%</em></div>
+          <div class="rec"><span class="n">Groundnut</span><div class="t"><i style="--w:85%"></i></div><em>85%</em></div>
+          <div class="rec"><span class="n">Maize</span><div class="t"><i style="--w:78%"></i></div><em>78%</em></div>
+          <div class="env"><span>Loamy soil</span><span>28&deg;C</span></div>
+        </div>
+        <span class="sample">Sample preview</span>
+      </div>
+    </section>
+  </div>
+
+  <div class="steps">
+    <div class="step"><div class="no">1</div><div><b>Verify the leaf</b><span>Checks the image is a valid plant leaf</span></div></div>
+    <div class="step"><div class="no">2</div><div><b>Detect the disease</b><span>AI identifies the crop disease</span></div></div>
+    <div class="step"><div class="no">3</div><div><b>Recommend a crop</b><span>Best picks for your soil and climate</span></div></div>
+  </div>
+</div>
+</body>
+</html>

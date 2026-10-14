@@ -40,6 +40,18 @@ function RequireMobileNumber({ children }) {
 }
 
 function App() {
+  const location = useLocation();
+  const isLandingPage = location.pathname === '/' || location.pathname === '/welcome';
+
+  if (isLandingPage) {
+    return (
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/welcome" element={<Home />} />
+      </Routes>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
@@ -49,6 +61,9 @@ function App() {
           <div className="max-w-7xl mx-auto">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/welcome" element={<Home />} />
+              <Route path="/detect" element={<Navigate to="/disease-detection" replace />} />
+              <Route path="/recommend" element={<Navigate to="/crop-recommendation" replace />} />
               <Route path="/disease-detection" element={<DiseaseDetection />} />
               <Route path="/crop-recommendation" element={<CropRecommendation />} />
               <Route path="/equipment" element={

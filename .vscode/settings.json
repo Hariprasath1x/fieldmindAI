@@ -1,4 +1,6 @@
 {
     "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.testing.pytestPath": "${workspaceFolder}/.venv/bin/pytest",
+    "python.testing.pytestArgs": ["tests"],
     "pyrefly.pyreflyExecutable": "from-environment"
 }

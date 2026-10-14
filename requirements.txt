@@ -12,4 +12,4 @@ httpx
 pytest
 pytest-asyncio
 rq
-redis
+redisopencv-python-headless
